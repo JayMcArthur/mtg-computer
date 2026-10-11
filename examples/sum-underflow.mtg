@@ -1,0 +1,10 @@
+# Sum using the decrement's underflow flag; the zero addition is harmless.
+input total = 0
+count = 3
+loop:
+total += count
+count -= 1
+if underflow goto done
+goto loop
+done:
+halt

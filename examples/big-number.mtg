@@ -1,0 +1,4 @@
+# Greater than u128::MAX; represented by a chain of base-144 NumBuilds.
+n = 340282366920938463463374607431768211456
+n *= n
+halt

@@ -1,0 +1,5 @@
+# Inputs are prepared register counters, not runtime assignments.
+input a = 2
+input b = 3
+a += b
+halt

@@ -1,0 +1,6 @@
+# All values are nonnegative integers. Whitespace separates tokens.
+n = 10
+cube = n
+cube *= n
+cube *= n
+halt

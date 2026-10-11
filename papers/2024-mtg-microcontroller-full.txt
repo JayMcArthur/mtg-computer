@@ -1,0 +1,1908 @@
+A Programming Language Embedded in Magic:
+The Gathering
+Howe Choong Yin #
+Independent Researcher, Singapore
+
+Alex Churchill #
+Independent Researcher, Cambridge, United Kingdom
+
+      Abstract
+Previous work demonstrated that the trading card game Magic: The Gathering is Turing complete,
+by embedding a universal Turing machine inside the game. However, this is extremely hard to
+program, and known programs are extremely inefficient. We demonstrate techniques for disabling
+Magic cards except when certain conditions are met, and use them to build a microcontroller with a
+versatile programming language embedded within a Magic game state. We remove all choices made
+by players, forcing all player moves except when a program instruction asks a player for input. This
+demonstrates Magic to be at least as complex as any two-player perfect knowledge game, which we
+demonstrate by supplying sample programs for Nim and the Collatz conjecture embedded in Magic.
+As with previous work, our result applies to how real Magic is played, and can be achieved using a
+tournament-legal deck; but the execution is far faster than previous constructions, generally one
+cycle of game turns per program instruction.
+
+2012 ACM Subject Classification Theory of computation → Representations of games and their
+complexity
+
+Keywords and phrases Programming, computability theory, Magic: the Gathering, two-player
+games, tabletop games
+
+Digital Object Identifier 10.4230/LIPIcs.FUN.2024.18
+
+Category FUN with Algorithms
+
+Related Version Full Version: https://www.toothycat.net/~hologram/Magic/Magic_Microcontroller_
+full.pdf
+
+
+ 1      Introduction and Previous Work
+Magic: The Gathering (also known as Magic) is the world’s largest tabletop collectible card
+game, played by hundreds of thousands of players in tournaments and by millions more
+players casually. In 2020, Churchill, Biderman & Herrick published an embedding of a
+universal Turing machine inside Magic [1]. This is the first widely played tabletop game to
+be shown Turing complete in the format in which it is usually played, as opposed to some
+infinite generalisation. For example, chess is EXPTIME-complete with infinite board and
+pieces, but has a finite number of states in the 8x8 board used for tournament play. Churchill
+et al. showed that the question “will this Magic game ever terminate” cannot be answered in
+the general case, even for two-player Magic played with all the usual tournament restrictions.
+However, this paper did not contain any concrete example computations.
+    The author of [2] investigated the runtime performance of this Universal Turing Machine
+(UTM) embedded within Magic. He established a compilation sequence from an arbitrary
+Turing machine with N states, into a 2-tag system, into the 2-state UTM(2,18), and thence
+into Magic. He supplied a simple Turing machine to compute 2+3 in a unary adder. However,
+he found that no simulation was able to establish how long it would take to compute 2+3
+in the UTM. The straightforward compiler’s output from this simple Turing machine for
+            © Choong Yin Howe and Alex Churchill;
+            licensed under Creative Commons License CC-BY 4.0
+12th International Conference on Fun with Algorithms (FUN 2024).
+Editors: Andrei Z. Broder and Tami Tamir; Article No. 18; pp. 18:1–18:37
+                   Leibniz International Proceedings in Informatics
+                   Schloss Dagstuhl – Leibniz-Zentrum für Informatik, Dagstuhl Publishing, Germany
+18:2   A Programming Language Embedded in Magic: The Gathering
+
+
+       computing 2+3 results in a tape over 40 million symbols long (15 million in the program
+       and 25 million in the data). The UTM simulation of the Turing machine needs to constantly
+       move between the program and data sections, resulting in absurdly inefficient computation
+       times. No simulation was able to establish how long it would take to compute 2+3 in the
+       Magic game.
+           The same author created an optimised unary adder Turing machine with just 2 states,
+       and compiled a simplified computation of 1+1. This completed in a mere 3,958,876,878
+       game cycles (of each of the two players taking a turn). Even after nearly 8 billion game
+       turns, because of the multiple steps in translating the calculation into the UTM(2,18), the
+       output consisted of hundreds of creature tokens, which needed to be interpreted by carefully
+       counting how many tokens of type Myr were mixed in among the hundreds of tokens with
+       type Aetherborn, all in order to retrieve the output of “2”.
+           In this paper we set out a different construction, which embeds a full microcontroller
+       within Magic: The Gathering. In Section 2 we describe at a high level some key features
+       of the construction, and Section 3 specifies the programming language supported by the
+       microcontroller. Section 4 and Appendix B provide the precise details of how all this is
+       implemented, and we work through an example instruction in Section 5. Section 6 contains
+       our conclusions and discussion of the implications. Finally, Appendix A provides several
+       sample programs, Appendix C explains which cards we use to modify other cards, and
+       Appendix D supplies a decklist that could be brought to a Magic tournament to assemble
+       the construction.
+
+
+        2     Outline of the Construction
+
+       The rest of this paper describes a construction that simulates a fully general programming
+       language within Magic: The Gathering. Compared to [1] this is also Turing complete, but is
+       much more efficient and easy to program, and reports its outputs much more clearly. It also
+       allows reading input from each of the players of the two-player Magic game in which it is
+       embedded, and can be programmed to terminate in a win for either player or a draw, or of
+       course can keep running indefinitely.
+           As with the Turing machine construction, we start by assuming one player, Alice, draws a
+       combination of cards that allows her to take over the game, draw all the rest of her deck, and
+       remove all cards from the hand of the opponent, Bob. After the initial setup is completed,
+       she removes all player choices, so that neither player has any option but to let the program
+       execution continue, short of conceding the game. Thus the outcome of this tournament-legal
+       Magic game is entirely determined by the result of the program.
+           The program is written in a language of 12 symbols, represented by basic land cards,
+       which are allowed to occur any number of times in a player’s deck. Alice’s deck needs to
+       start off containing a lot of other cards, but once the microcontroller is set up and she has
+       drawn all her cards, she returns to her deck a sequence of cards from among these 12, which
+       encodes the program to be executed.
+           The program is read one card at a time. During Alice’s combat step we put one of these
+       cards, which we call the “program permanent”, onto the battlefield for long enough to read it,
+       then move it to the bottom of Alice’s deck. We in fact make Alice have three combat steps
+       each turn, and in each one, a program permanent is read and possibly other game actions are
+       (automatically) taken. Each instruction in the programming language is a sequence of three
+       symbols, interpreted by some set of “instruction permanents” that do extra things during
+       Alice’s or Bob’s turn.
+Howe C. Y. and A. Churchill                                                                            18:3
+
+
+    All instruction permanents that don’t apply to the current instruction are “inactive”,
+i.e. have all their abilities removed. To do this we turn them into creatures with a certain
+creature type (e.g. Angel), have a card which makes all Angels also Saprolings, make all
+Saprolings lands, and remove abilities from all lands. Crucially, we can conditionally allow a
+certain group of instruction permanents to regain their abilities by temporarily “phasing out”
+the card which makes (e.g.) Angels into Saprolings. (Objects in Magic which are “phased
+out” are treated by the rules as if they don’t exist.) We do this during one of Alice’s combat
+steps, so those instruction permanents have their abilities during the rest of Alice’s turn
+(including her later combat steps) and all of the other player Bob’s turn.
+    Permanents in Magic have zero or more colours, from the set of white, blue, black, red
+and green. Permanents that are creatures have zero or more creature types, also drawn from
+a well-defined set, but this set has over 200 types in it. We use both of these characteristics
+extensively. All “inactive” permanents are made green Saproling creatures, and all green
+creatures are given protection from certain creature types. We make extensive use of the
+capabilities Magic offers to edit existing cards by changing colour words (using the card
+Mind Bend), creature type text (using Artificial Evolution), colours (using Prismatic
+Lace), and creature types (using a variety of cards according to circumstances).
+    In particular, we carefully apply restrictions so that any time an ability triggers that would
+normally let its controller choose a target, there is precisely one legal target (or occasionally
+no targets, which prevents the ability from going on the stack at all). We ensure that all
+creatures attack and block where possible using Grand Melee, but make most creatures
+unable to attack or block using Stormtide Leviathan. Any time a creature is able (and
+thus forced) to attack, we arrange that either it can’t be blocked at all, or there is precisely
+one creature forced to block it.
+
+ 3     The Programming Language
+The programming language we implement has the following features:
+  Twelve registers r0 . . . r11 , each able to contain an arbitrarily large nonnegative integer.
+  An unlimited number of memory slots, each addressed by a nonnegative integer address;
+   each memory slot can hold a single arbitrarily large nonnegative integer.
+  A single Boolean flag that is set by certain instructions such as comparisons. The flag can
+   be read by certain instructions; most notably, jump instructions can be made conditional
+   on whether the flag is true or false.
+
+   The program is written in a language of 12 symbols, and each instruction is a sequence of
+three symbols. For example, the sequence 0 1 2 (represented by cards Plains Island Swamp)
+encodes the instruction “Add 1 2”, which will result in increasing the value of register r1 by
+the value of r2 . We provide the following instructions in the language:
+
+
+5 Y Z (Y ̸=Z)     Set rY rZ              Set rY to the value of rZ .
+5YY               Zero rY                Set rY to zero.
+0YZ               Add rY rZ              Set rY to rY + rZ .
+41Z               Add1 rZ                Set rZ to rZ + 1.
+42Z               Halve rZ               Set rZ to half the value of rZ , rounding down. Set
+                                         the flag to the remainder from the division.
+1 Y Z (Y ̸=Z)     SubCond rZ rY          If rZ ≥ rY , set rZ to rZ − rY and set the flag to 0.
+                                         Otherwise, set the flag to 1.
+
+
+
+
+                                                                                                     FUN 2024
+18:4   A Programming Language Embedded in Magic: The Gathering
+
+
+
+       1 ZZ                  Sub1Cond rZ               If rZ ≥ 1, set rZ to rZ − 1 and set the flag to 0.
+                                                       Otherwise, set the flag to 1.
+       6YZ                   Mult rZ rY                Set rZ (note, not rY ) to rY × rZ .
+       7YZ                   DivCeil rY rZ             Set rY to ⌈rY /rZ ⌉. If the division was exact, set the
+                                                       flag to 0, otherwise set it to 1. If rZ = 0 or Y = Z,
+                                                       this is undefined behaviour.
+       2Y 0                  AInput rY                 Set rY to a nonnegative integer of Alice’s choice.
+       2Y 1                  BInput rY                 Set rY to a nonnegative integer of Bob’s choice.
+       2Y 2                  SetF rY                   Set rY to the flag’s value.
+       2Y 3                  SetNF rY                  Set rY to the Boolean negation of the flag’s value
+                                                       (1 if it’s 0 and vice versa).
+       2Y 4                  Rand6 rY                  Set rY to a random nonnegative integer less than 6.
+       2Y 5                  Rand20 rY                 Set rY to a random nonnegative integer less than 20.
+       10 Y Z                NumBuild 12Y +Z           Set r0 to 12Y +Z, except if the last instruction that
+                                                       was executed was also a NumBuild instruction, in
+                                                       which case multiply r0 by 144 and add 12Y +Z to it.
+                                                       As its name suggests, this instruction can be used
+                                                       repeatedly to build any nonnegative integer value in
+                                                       r0 , two base-12 digits at a time.
+       8YZ                   Store rZ rY               Store the value of rY at memory address rZ .
+       9YZ                   Load rY rZ                Load the value at memory address rZ into rY .
+       3 0 Z′                JumpFwd Z ′               Jump forward by Z ′ instructions. If Z = 0, Z ′ is
+                                                       r0 , and otherwise, Z ′ is Z. Thus instead of a useless
+                                                       command to jump 0 instructions, we gain the ability
+                                                       to jump an arbitrary or computed distance.
+       3 1 Z′                JumpBwd Z ′               Jump backward by Z ′ instructions. Backwards jumps
+                                                       by more than the length of the program1 do nothing.
+       32Z                   JumpFwdNF Z ′             Jump forward by Z ′ instructions if the flag is 0/false.
+       33Z                   JumpBwdNF Z ′             Jump backward by Z ′ instructions if the flag is
+                                                       0/false.
+       34Z                   JumpFwdF Z ′              Jump forward by Z ′ instructions if the flag is 1/true.
+       35Z                   JumpBwdF Z ′              Jump backward by Z ′ instructions if the flag is 1/true.
+       360                   CallFwd r0                Call a function r0 instructions ahead: Jump forward
+                                                       3r0 cards and push P − 3r0 onto the return stack. P
+                                                       is the length of the program in cards1 . If r0 = 0 or
+                                                       3r0 > P , this is undefined behaviour.
+       37Z                   Return Z ′                Return from a function Z ′ instructions long: Pop
+                                                       a value S from the return stack, and jump forward
+                                                       max(0, S − 3Z ′ ) cards. If the return stack was empty,
+                                                       end the game in a draw.
+       361                   CallBwd r0                Call a function r0 instructions behind: Jump back-
+                                                       ward 3r0 cards and push 3r0 onto the return stack.
+                                                       If 3r0 ≥ P , this is undefined behaviour. May not be
+                                                       used to call a function from within itself.
+
+
+
+       1
+           If the program is less than 6 cards long, P is the first multiple of the length that is at least 6.
+Howe C. Y. and A. Churchill                                                                                18:5
+
+
+
+362                 CallBwdR r0             Call a function r0 instructions behind (direct-
+                                            recursion-capable): Same as CallBwd, but push
+                                            P + 3r0 , so that this may be used to call a func-
+                                            tion from within itself.
+11 Y Z (Y ̸=Z)      FLess rZ rY             Set the flag to 1 if rZ < rY , 0 otherwise.
+                                            Flag-combining.
+11 Z Z              FIsZero rZ              Set the flag to 1 if rZ = 0, 0 otherwise.
+                                            Flag-combining.
+400                 HaltD                   End the game in a draw.
+401                 HaltA                   End the game with Alice winning.
+402                 HaltB                   End the game with Bob winning.
+
+
+
+    “Flag-combining” is a property used by some instructions whose only purpose is to set the
+flag. It means that flag values given by subsequent instructions are combined by logical OR
+instead of replacing the flag’s value. This state ends when any of the following is executed:
+    Any instruction that uses the flag’s value.
+    Any jump instruction (including calls and returns, and regardless of whether the jump is
+    taken or not).
+
+    For example, this can be used to check whether r0 and r1 are equal, with FLess r0 r1
+followed by FLess r1 r0 .
+    The program is cyclic, which is to say it wraps around: after passing the final instruction
+(by executing it or jumping past it) execution continues with the first instruction. Similarly
+you can jump backwards beyond the start of the program and end up near the end of the
+program.
+    Encountering a sequence that does not match any of the instructions above is undefined
+behaviour.
+    These instructions are a superset of those required for a random-access register machine
+such as Melzak’s Q-machine, which is Turing complete.[3]
+
+
+    4    Implementation of the Microcontroller
+In this section we describe the various gadgets that make up the microcontroller as described
+in the previous section. We defer discussion of how to set up the board state (including
+modifying card types, creature types, colours, etc) to Appendix C.
+    Note that this PDF contains tooltips: hover over a bold card name to see its full rules
+text, and hover over a dashed underline to see how specific modifications are accomplished
+or reminders of how creature types are used.2
+
+
+4.1      The program
+The program is a sequence of the following cards: Plains, Island, Swamp, Moun-
+tain, Forest, Wastes, Snow-Covered Plains, Snow-Covered Island, Snow-Covered
+
+
+2
+    These display in Adobe Reader but may not display in web browsers. Readers using a web browser may
+    like to read the details at [4] instead, where we provide more detailed tooltips.
+
+
+
+
+                                                                                                         FUN 2024
+18:6   A Programming Language Embedded in Magic: The Gathering
+
+
+       Swamp, Snow-Covered Mountain, Snow-Covered Forest, and Snow-Covered Wastes3 .
+       We call these cards “symbol cards” and assign them numbers 0, 1, 2, . . . , 11 in the order
+       listed.
+           Most of the time, one of the cards in the program will be on the battlefield under Alice’s
+       control; we call this card the program permanent. The rest of the cards will be in Alice’s
+       library, with the next symbol in the program on top of the library, continuing in program
+       order from top to bottom, then continuing from the start of the program until the symbol
+       before the current symbol.
+           The program is made up of instructions that each consist of 3 cards. X, Y, and Z shall
+       refer to the numbers of the three cards that form the instruction currently being executed, in
+       that order. For example, the instruction “Add r1 r2 ” is represented by 0 1 2 (Plains Island
+       Swamp), and X is 0, Y is 1 and Z is 2.
+
+       4.2      Global environment control
+       On the battlefield is a Grand Melee (“All creatures attack each combat if able. All creatures
+       block each combat if able”) and a Stormtide Leviathan (“Creatures without flying or
+       islandwalk can’t attack”). Most creatures are unable to attack; when we want a creature to
+       be able to attack, we will give it flying or islandwalk. Bob’s creatures with islandwalk will
+       be unblockable because Alice controls the program permanent which is given type Island.
+           Both players have life total 1, and each has a Worship keeping their life totals at 1
+       through the damage they will be dealt. (Note that Worship only modifies the result of
+       damage; the damage itself is still dealt, so effects triggered on combat damage still trigger.)
+
+       4.3      Advancing through the program
+       Alice has a Vaevictis Asmadi, the Dire, whose rules text reads “Whenever Vaevictis
+       Asmadi, the Dire attacks, for each player, choose target permanent that player controls.
+       Those players sacrifice those permanents. Each player who sacrificed a permanent this way
+       reveals the top card of their library, then puts it onto the battlefield if it’s a permanent card.”.
+          We use the techniques in Appendix C to make Vaevictis Asmadi, the Dire into a
+       1/1 Sliver Beast Reflection. It attacks in Alice’s combat phase. Its ability is forced (see
+       subsection 4.6) to target the program permanent for Alice, and one particular permanent for
+       Bob. When it resolves, Alice sacrifices the program permanent, and Wheel of Sun and
+       Moon enchanting Alice sends it to the bottom of Alice’s library; then the next card (on
+       top of Alice’s library) is put onto the battlefield, becoming the new program permanent.
+       Meanwhile, Bob has been given a Tajuru Preserver stopping Bob’s permanent from being
+       sacrificed, and thus Bob does not reveal the top card of his library.
+          Alice controls Tetsuko Umezawa, Fugitive ensuring that Vaevictis Asmadi, the
+       Dire, and all her other creatures with power or toughness 1 or less, can’t be blocked.
+
+       4.4      Disabling and conditionally enabling permanents
+       For each of the 12 program cards, letting n be its number, we choose a creature type Xn . X0
+       is Aetherborn, X1 is Beeble, and so on through Cephalid, Drake, Eldrazi, Faerie, Gremlin,
+       Homarid, Illusion, Juggernaut, Kavu, and Lhurgoyf.
+
+
+       3
+           To be released on 7th June 2024. To play the Microcontroller before that date, instead use Persistent
+           Petitioners and Infinite Reflection as described at [4].
+Howe C. Y. and A. Churchill                                                                                18:7
+
+
+    We have Alice control twelve token copies of Dralnu’s Crusade, whose printed rules
+text reads “All Goblins get +1/+1. All Goblins are black and are Zombies in addition to
+their other creature types.” However we use the techniques in Appendix C to edit each one to
+instead to affect creatures with a different one of the 12 creature types Xn (n ∈ {0, 1, . . . , 11}),
+and add type Saproling. Life and Limb makes Saprolings into lands, and also makes them
+green, and then Blood Sun removes their abilities. So all creatures with any of the 12
+creature types Xi have their abilities removed.
+   Each of these Dralnu’s Crusades is made into a creature with creature type Sliver,
+with power and toughness 2/1, and given flying. For each of the 12 basic land cards, the
+corresponding Dralnu’s Crusade is equipped with a Strata Scythe imprinted with that
+basic land card (“Equipped creature gets +1/+1 for each land on the battlefield with the
+same name as the exiled card”).
+   All twelve Dralnu’s Crusades are forced to attack, and the one corresponding to the
+current program permanent will be boosted to 3/2; the previously mentioned Tetsuko
+Umezawa, Fugitive ensures that the others can’t be blocked.
+    Bob controls a Dream Fighter (“Whenever Dream Fighter blocks or becomes blocked
+by a creature, Dream Fighter and that creature phase out”) with creature type Sliver and
+granted reach (so it can block creatures with flying). This blocks the 3/2 Dralnu’s Crusade,
+and they both phase out, so that creatures of the type corresponding to the current program
+permanent are no longer made Saprolings. We have a Shadow Sliver ensuring that only
+Slivers can block these Dralnu’s Crusades.
+
+
+
+
+    Figure 1 After Vaevictis Asmadi, the Dire puts a Wastes onto the battlefield, the only one of
+Alice’s attacking Dralnu’s Crusades which Bob’s Dream Fighter can block is the one given +1/+1
+by a Strata Scythe imprinted with Wastes.
+
+
+
+    This reads the first card of an instruction; creatures of the corresponding type will regain
+their abilities after Dream Fighter’s ability resolves. We also choose a thirteenth creature
+type (Monkey) denoted XA , and have another Dralnu’s Crusade making XA creatures
+also Saprolings, but this one is not a creature; rather we make it an artifact so Bludgeon
+Brawl makes it an Equipment, and attach it to Bob’s Dream Fighter, so it will phase out
+when the Dream Fighter does. This means that creatures of type XA get to regain their
+abilities after the first card is read, no matter what it is, but they will lose their abilities
+again when Bob’s turn starts and the Dream Fighter phases back in.
+   We will also often want to use this conditional mechanism on noncreature permanents; to
+do that, we make token creature copies of them using Urza, Prince of Kroog, combined
+with Memnarch if necessary.
+
+
+
+                                                                                                         FUN 2024
+18:8   A Programming Language Embedded in Magic: The Gathering
+
+
+       4.5    Reading the second and third cards
+       Alice controls a Bloodthirster (“Whenever Bloodthirster deals combat damage to a player,
+       untap it. After this combat phase, there is an additional combat phase. Bloodthirster can’t
+       attack a player it has already attacked this turn.”) It is made a 1/1 Sliver Beast Reflection
+       and given double strike. This also attacks, can’t be blocked because of Tetsuko Umezawa,
+       Fugitive, and adds a second combat phase. The second combat phase is used to read the
+       second card, using another copy of the above setup, but with all the creatures involved
+       granted an additional creature type of XA so that they do not attack or block in the first
+       combat phase (because they don’t have their abilities at that point). So there is a second
+       Vaevictis Asmadi, the Dire to advance through the program, given types Sliver Beast
+       Reflection XA ; a second Dream Fighter with reach and types Sliver XA ; and another batch
+       of Dralnu’s Crusades for another 13 creature types Y0 , Y1 , . . . , Y11 , and YA (Antelope,
+       Basilisk, Camel, Dauthi, Efreet, Fox, Gnome, Hippo, Inkling, Jellyfish, Kor, Lammasu, and
+       Metathran), the first 12 having Strata Scythes.
+           Similarly, since the Bloodthirster has double strike, it will also give Alice a third combat
+       phase, which is used by another copy of the setup (with creature type YA ) to make another
+       13 creature types Z0 , Z1 , . . . , Z11 , and ZA conditional on the third card of the instruction
+       (Aurochs, Brushwagg, Camarid, Druid, Elephant, Ferret, Graveborn, Hamster, Imp, Jackal,
+       Kithkin, Licid, and Masticore).
+
+
+
+
+          Figure 2 More Dralnu’s Crusades attack in the second and third combat phases, and another of
+       each is blocked and phases out. They couldn’t attack before because of their types XA or YA .
+
+
+
+       4.6    Constraining targets
+       Almost all creatures will be green; any creature that isn’t naturally green and isn’t specified
+       to be differently coloured is made green by Prismatic Lace. A few creatures will be red or
+       blue instead, but even those are made green while inactive by Life and Limb.
+           A Masked Gorgon edited to give green and blue creatures protection from Reflections
+       means that only red creatures are legal targets for Reflections’ abilities. Similarly, a Masked
+       Gorgon edited to give green and red creatures protection from Beasts means that only blue
+       creatures are legal targets for Beasts’ abilities.
+Howe C. Y. and A. Churchill                                                                                                                                                            18:9
+
+
+    We will refer to the creature types Reflection and Beast as tR and tU respectively,
+indicating their function. (“U” is the usual abbreviation for “blue” in Magic.)
+    As mentioned earlier, each Vaevictis Asmadi, the Dire has been made both a Beast
+and a Reflection, so that green creatures, blue creatures, and red creatures are all illegal
+targets for it; the intended target under Alice’s control is a noncreature land. The same
+types are applied to the Bloodthirster for a different purpose, to stop it from blocking
+on Bob’s turn (which is something else protection does), because it untaps itself and stays
+untapped (as its own ability prevents it attacking in the later combat phases).
+    Spectral Guardian makes noncreature artifacts illegal targets for anything. Alice and
+Bob both control a Sterling Grove to make other enchantments illegal targets for anything.
+Alice’s is made an artifact so it gains shroud from Spectral Guardian. Bob’s one does not
+itself have shroud, and thus it is the only legal target under Bob’s control for Vaevictis
+Asmadi, the Dire, but Bob has a Tajuru Preserver so he does not sacrifice anything.
+We do however give Bob’s Sterling Grove protection from blue, which will be useful later
+to stop some other things from targeting it.
+    Alice and Bob both have Ivory Mask, making both players illegal targets for anything.
+
+4.7          Order of continuous effects, and one more of them
+The Magic Comprehensive Rules [5] specific a system of “layers” for working out what
+happens when multiple effects apply to the same permanent. For example, effects that make
+one permanent a copy of another object apply in layer 1. All effects that change a permanent’s
+type (such as creature, land, etc) or subtype (Angel, Goblin, etc) apply in layer 4. Anything
+that adds or removes abilities applies in layer 6, and so on. Within a layer, if multiple effects
+try to affect the same permanent, each object or effect has a “timestamp”, generally when
+that object or effect was created. Within this document, we denote timestamps with circled
+numbers: an effect with timestamp ⃝   1 will take effect earlier than timestamp ⃝.2
+    The continuous effects mentioned so far are timestamped as follows:
+
+      ⃝:
+      1 Stormtide Leviathan
+      ⃝:
+      2 Dralnu’s Crusades and Blood Sun
+      ⃝:
+      3 Life and Limb and protection-granting and shroud-granting effects
+
+             Any other continuous effect is timestamped ⃝                                                                                 1 unless otherwise stated.
+             The exception to timestamp order is “dependency”: if two effects would apply within
+the same layer, but one will change the existence of the second or which objects the second
+acts on or what it does to them, the first one applies first even if the second has an earlier
+timestamp. This applies to our construction where abilities that will be removed by the
+Blood Sun wait for it to be applied (and thus end up not being applied themselves).
+             The program permanent is a land so it is granted type Island by the Stormtide Le-
+viathan, but it may be a Forest as well. We do not want Life and Limb to make the
+program permanent a creature. So we also have Alice control an Illusionary Terrain,
+madeprotect unhbox voidb@x protect penalty @M  {}aprotect unhbox voidb@x protect penalty @M  {}creature with type $Z_A$ , within timestamp ⃝1 after the Stormtide Leviathan, turn-
+ing all Islands to Islands. This is not as ineffective as it sounds: rule 305.7 [5] says that this
+removes all other types, so that the program permanent’s subtype is set to Island and no
+others. Note that, because there are no Saprolings before ⃝,                                                                                          2 the Stormtide Leviathan
+does not have a dependency on the Life and Limb.
+             By being made a ZA , this Illusionary Terrain has its abilities removed by Blood Sun
+most of the time, most importantly during Alice’s upkeep. Because the effect of setting
+basic lands’ types is applied in layer 4, before the abilities are removed in layer 6, it still
+
+
+
+                                                                                                                                                                                     FUN 2024
+18:10   A Programming Language Embedded in Magic: The Gathering
+
+
+        functions despite the abilities being removed. However, the removal of abilities does shut off
+        its cumulative upkeep.
+
+        4.8           Registers
+        There are twelve registers named r0 , r1 , . . . , r11 , each of which holds a nonnegative integer
+        value.
+            Each register rn is a token copy of Joraga Warcaller under Bob’s control, given
+                                and additionally given creature type Rabbit, given
+                            copiable creature type $Z_n$
+
+                    coloured red at timestamp ⃝,
+                  ,indestructible and vigilance                                                                                           4 with base power and toughness
+               noncopiably set to $2/2$
+                but with twoprotect unhbox voidb@x protect penalty @M  {}scalebox {0.65}[1.0]{$-$}1/scalebox {0.65}[1.0]{$-$}0 counters, and a number of +1/+1 counters on it equal to its
+        register value. (As always, see Appendix C or the tooltips for how all these changes are
+        accomplished.) Joraga Warcaller’s rules text says “Other Elf creatures you control get
+        +1/+1 for each +1/+1 counter on Joraga Warcaller”. Thus, after Z is read from the program,
+        the active register rZ regains its ability and adds its value to the power and toughness of
+        each other Elf that Bob controls. (This does not include the other registers; their Elf type is
+        overwritten.)
+            Note that each register’s power is equal to its value, whether it is rZ (having base power
+        2 and two −1/−0 counters) or not (having base power 1 from the Life and Limb, +1 power
+        from a Dralnu’s Crusade, and two −1/−0 counters).
+            All the registers are made red by Prismatic Lace at timestamp ⃝,                                                                                           4 later than that
+        of the Life and Limb, so that they are always red even when inactive. But the inactive
+        registers are still Saprolings even though they’re red.
+            r0 also has Rhino added to its creature types; this will be useful for some instructions
+        that use specifically this register.
+
+
+
+
+           Figure 3 The first three registers. In this case r0 has value 3, r1 value 0 and r2 value 2. If Z = 0,
+        the Dralnu’s Crusade making Aurochs into Saprolings is phased out and Bob’s Elves get +3/+3.
+
+               For each n ∈ {0, 1, . . . , 11}, Bob has a Riders of Gavony giving $Z_n$ creatures protection
+        from Yetis. Each of these is made into a noncreature artifact with mana value 0 and attached
+        to the Dralnu’s Crusade that applies to Yn , so that they phase out together. As a result,
+        this means that each register except for rY has protection from Yetis. Then, a creature can
+        be given the types Reflection and Yeti so that it can only target rY ; we call this combination
+        $tr_Y$ .
+Howe C. Y. and A. Churchill                                                                         18:11
+
+
+   Bob also has another Riders of Gavony giving Saprolings protection from Zubera
+creatures. This means the inactive registers (those other than rZ ) can’t be targeted by any
+creature that’s a Zubera. Then, as above, creature types Reflection and Zubera together
+mean that a creature can only target rZ ; we call this combination $tr_Z$ .
+
+4.9    Memory
+We provide an unlimited number of memory slots, each addressed by a nonnegative integer
+address. Each memory slot can hold a single arbitrarily large nonnegative integer.
+    A nonzero value V at a memory address A is represented by a Mouse token with base
+power and toughness V/V under Alice’s control with A +1/+1 counters on it. A zero value
+is represented by an absence of such a token.
+
+4.10    The flag
+There is a Boolean flag that some instructions use. It is represented by a card, being in Bob’s
+library for 0/false and in Bob’s hand for 1/true; this card must not have any abilities that
+function in those zones other than characteristic-defining abilities. We assume that Bob has
+at least one such card in his deck (most lands, planeswalkers, instants and sorceries would be
+suitable). We remove all other cards from Bob’s hand, library and graveyard.
+    Wheel of Sun and Moon enchanting Bob allows us to set the flag to 0 by making Bob
+discard the card. We give Bob a Tomorrow, Azami’s Familiar, allowing us to set the flag
+to 1 by making Bob draw a card, while not making Bob lose the game if the flag was already
+1.
+    To stop Bob from playing this card, we give Bob a Nevermore and/or an Aggressive
+Mining made into an artifact as appropriate.
+
+4.11    Further environment control
+To prevent any player choice involving the program permanent’s abilities, we use Root
+Maze to make each new program permanent enter the battlefield tapped and Choke to
+keep them tapped (recall that they are all made Islands). Also, Bob’s Sterling Grove has
+its activated ability shut off by Suppression Bonds attached to it. Stony Silence and
+Cursed Totem shut off activated abilities of artifacts and creatures.
+    Both players control a copy of Recycle, skipping both player’s draw steps. Mirror
+Gallery disables the “legend rule”. And we give both players a Corrosive Mentor so that
+black creatures controlled by either player have wither.
+
+4.12    Instructions
+See Appendix B for details on how the individual instructions in the language are implemented.
+
+ 5     Example Instruction
+For demonstration purposes, here is how an example turn cycle looks. Let us say the next
+three cards on the top of Alice’s library are Wastes, Plains, Swamp. This triplet encodes
+symbols 5 0 2, a Set instruction.
+    At the start of Alice’s turn, most creatures are Saprolings and therefore have no abilities.
+Recall that all creatures are forced to attack and block where able, but only creatures with
+flying or islandwalk are allowed to attack. In Alice’s first combat phase, twelve flying 2/1
+
+
+
+                                                                                                   FUN 2024
+18:12   A Programming Language Embedded in Magic: The Gathering
+
+
+        Dralnu’s Crusades attack along with the Bloodthirster and Vaevictis Asmadi, the
+        Dire, whose ability puts the Wastes onto the battlefield. This makes the Dralnu’s Crusade
+        affecting X5 get +1/+1 from its Strata Scythe, and so it gets blocked by Bob’s first Dream
+        Fighter and phases out. Creatures with type X5 or XA regain their abilities (unless they
+        also have another type making them a Saproling such as Yn ).
+              In the second combat phase (granted by Bloodthirster), another Vaevictis Asmadi,
+        the Dire and twelve more Dralnu’s Crusades attack, as their type XA is no longer causing
+        their flying ability to be removed. This Vaevictis’s ability puts the Wastes onto the bottom
+        of Alice’s library and the next card of the program in its place, the Plains. The Dralnu’s
+        Crusade affecting Y0 gets +1/+1 from its Strata Scythe and gets blocked by Bob’s second
+        Dream Fighter, whose type XA is no longer having its reach ability removed. Creatures
+        with type Y0 or YA regain their abilities.
+              In the third combat phase, Alice’s Archpriest of Iona with types X5 YA trY Cleric has
+        finally regained its abilities. Its ability triggers, and is forced to target r0 , because its types
+        $tr_Y$ mean it can’t target any green or blue creatures or any of the other registers. r0 gains
+        flying, so it’ll be able to block, and gets a temporary +1/+1.
+              When the third set of Dralnu’s Crusades and the third Vaevictis Asmadi, the Dire
+        attack, Alice’s Shape Stealer with types X5 YA is also forced to attack. The Dralnu’s
+        Crusades all have shadow, so r0 can’t block any of them; the only creature r0 can block is
+        the Shape Stealer. Shape Stealer’s ability gives it base power equal to r0 ’s value +1,
+        which is why it has the −1/−0 counter so its actual power is r0 ’s value. It is given wither
+        because it is black, so the damage is dealt as −1/−1 counters, cancelling out all the +1/+1
+        counters on the register and setting r0 ’s value to 0.
+
+
+
+
+           Figure 4 The five steps of instruction 5 0 2, Set r0 r2 .
+Howe C. Y. and A. Churchill                                                                           18:13
+
+
+    In Bob’s combat phase, Halana and Alena, Partners triggers. Because it is an Elf,
+its power is equal to r2 ’s value. And because it has types $tr_Y$ as well, just like with Alice’s
+Archpriest of Iona, the only legal target for its trigger is r0 . So it adds r2 +1/+1 counters
+to rY . Then nothing else happens on the rest of Bob’s turn, and we move back to Alice’s
+turn, when the three copies of Vaevictis Asmadi, the Dire will read three more cards
+from the program.
+
+ 6     Implications and Conclusion
+6.1    Readability and programmability
+In sharp contrast to the impenetrable millions of tokens produced by the Turing machine in
+[1], the game state will be clearly readable when a program in this construction terminates.
+After the computation of sample program 1 “Calculate 10 cubed” (see Appendix A), there
+will be one Mouse creature token with power and toughness 1000/1000. When sample
+program 2 “Prime Factors” halts, for each prime factor of the input number, there will be one
+Mouse creature token with power and toughness equal to that factor. When sample program
+4 “Nim” halts, the result of the Magic game will be victory for Alice or Bob according to
+who won the embedded game of Nim.
+     The programming language provided is comparable to other microcode programming
+languages and assembly languages. It has some quirks but is perfectly usable to write
+moderate-sized programs. Readers are invited to write their own programs in the simulator
+we wrote to test the sample programs [6].
+
+6.2    Tournament playability
+The construction uses many different Magic cards, far more than are normally included in
+tournament decks. But it is legal to bring a deck with more than 60 cards to a tournament;
+players sometimes play decks with over 200 cards [7]. The only restriction is that you must
+be able to physically shuffle the deck in a reasonable amount of time [8].
+    Appendix D contains a decklist of a 360-card deck which could be brought to a Legacy
+tournament. The deck’s composition breaks down as 160 land cards to be used for the
+program; 136 distinct named cards used in the microcontroller; 40 cards used during setup
+to edit the text and characteristics of the cards used on the microcontroller; and 24 cards
+used to generate an unbounded amount of mana, draw all the remaining cards, set up the
+construction and remove all Bob’s cards.
+    With the correct draw, a player can take control of the game as early as the first turn,
+and set up the construction. Getting that correct draw is much less likely than with a 60-card
+deck, but this is a theoretical result anyway; the difference between a one in a million chance
+and a one in several trillion is not particularly relevant.
+    There are minimal constraints on Bob’s deck (one card to serve as the flag must have no
+abilities that function in the graveyard or hand), which will easily be satisfied by any normal
+deck. So it is perfectly possible for a hapless player to sit down expecting a tournament
+Magic game, have the opponent take over and set up the Microcontroller, and find that they
+can only win the game by winning (say) a game of chess instead.
+
+6.3    Computational implications
+The previous construction in [1] was Turing complete, so this does not increase the amount
+of computation possible inside Magic. However, the addition of input commands during
+
+
+
+                                                                                                     FUN 2024
+18:14   A Programming Language Embedded in Magic: The Gathering
+
+
+        program execution adds a lot to the programs that can be usefully written, in terms of
+        ability to simulate multi-player games involving choices – see e.g. sample program 4 which
+        implements Nim. The language is clearly powerful enough to similarly write programs for
+        chess, checkers, go, or any similar two-player perfect knowledge game.
+            A common joke upon the publication of [1] was “Now we can write Magic Online [a
+        digital implementation of Magic] in Magic”. With the Turing machine-based construction,
+        all players would have had to pre-register all their moves before computation started. By
+        contrast, if a digital card game were implemented using the construction in this paper, players
+        could choose their moves during gameplay in response to the moves made by their opponent.
+            Similarly, this result shows that the complexity of Magic includes any game or algorithm
+        which involves a finite (but potentially unbounded) sequence of choices, including responses
+        to another player’s choices. It is of course still not an especially practical environment to
+        perform any real computation.
+            We include sample program 3, which searches for a counterexample to the Collatz
+        conjecture, as a concrete demonstration of the possibility brought up in discussions of [1].
+        If Alice should set up the microcontroller and start this program, the game is a victory for
+        Bob as soon as the program finds a cycle of numbers that is a counterexample to the Collatz
+        conjecture. If (as is widely suspected) no such counterexample exists [9], or if it instead finds
+        a sequence that goes on forever without repeating, the game is a draw by infinite loop. This
+        provides an explicit Magic game state where all player choices have been removed but the
+        end result of the game is unknown to current mathematics.
+
+        6.4     Further research
+        It is clear that Magic is as computationally complex as it’s possible for a perfect knowledge
+        game to be. But not all two-player games are perfect knowledge, and Magic contains many
+        cards and mechanics that use hidden information. Our construction doesn’t use any of
+        these, but it’s possible future constructions could. This would allow embedding a wider
+        variety of games into Magic, such as two-player games where both players choose their moves
+        simultaneously.
+            It is also possible that there exist other tabletop games which support embedding this
+        kind of construction. But any such game would need to be in the small subset of tabletop
+        games which allow all of the following:
+
+             An unlimited number of player actions rather than a fixed number of turns
+             An unlimited number of at least one resource
+             Some way to constrain the actions players can perform
+             Enough flexibility in player choices to allow forcing one action to result in another
+
+            It may well be the case that Magic is the only widely played tabletop game meeting these
+        criteria which has enough depth of rules and scope for player creativity to allow this kind of
+        construction. If that is the case, we are very grateful to Wizards of the Coast for providing
+        such a versatile set of building blocks for us to play with.
+
+
+               References
+         1     Alex Churchill, Stella Biderman, and Austin Herrick. Magic: The Gathering is Turing complete.
+               In 10th International Conference on Fun with Algorithms (FUN 2020), 2020.
+         2     Jan Biel. How to run any program in a Magic: The Gathering Turing machine, 2019.
+               https://www.youtube.com/watch?v=YzXoFldEux4.
+Howe C. Y. and A. Churchill                                                                       18:15
+
+
+ 3   Z.A. Melzak. An informal arithmetical approach to computability and computation. Canadian
+     Mathematical Bulletin, 4(3):279–293, 1961.
+ 4   Choong Yin Howe and Alex Churchill. A more easily programmable system constructible in
+     Magic: The Gathering, Apr 2024. https://cyh31.neocities.org/amepscimtg/explanation.
+ 5   Wizards of the Coast. Magic: The Gathering comprehensive rules, Jan 2024. https://magic.
+     wizards.com/en/rules.
+ 6   Alex Churchill and Choong Yin Howe. Magic microcontroller simulator, Apr 2024. https:
+     //www.toothycat.net/~hologram/Magic/MTGProgSimulatorText.html.
+ 7   William “Huey” Jensen.              Retro deck highlight:          Huey’s 2002 battle
+     of     wits,     Jun     2023.             https://strategy.channelfireball.com/home/
+     retro-deck-highlight-hueys-2002-battle-of-wits/.
+ 8   Wizards of the Coast. Magic: The Gathering tournament rules, Jan 2024. https://wpn.
+     wizards.com/en/rules-documents.
+ 9   Jeffrey C. Lagarias. The 3x+1 problem: An overview. The Ultimate Challenge: The 3x+1
+     Problem, pages 3–29, 2010.
+10   Alex Churchill and Choong Yin Howe. Magic microcontroller website, Apr 2024. https:
+     //www.toothycat.net/~hologram/Magic/.
+
+
+
+
+                                                                                                 FUN 2024
+18:16   A Programming Language Embedded in Magic: The Gathering
+
+
+         Appendix A             Sample Programs
+        Readers are encouraged to explore the functionality of these sample programs firsthand by
+        executing them within the provided simulator interface [6] where they are preset options.
+
+           Sample Program 1 10 Cubed
+
+         Symbols     Instruction      Comments
+         10 0 10     NumBuild 10      Initialise r0 to 10
+          510        Set r1 =r0       r1 is the output
+          601        Multiply r1 r0   Now r1 is 100
+          601        Multiply r1 r0   Now r1 is 1000
+          400        HaltD            We’re done.
+
+            The complete program is: 10 0 10 5 1 0 6 0 1 6 0 1 4 0 0 – or in cards: Snow-Covered
+        Forest, Plains, Snow-Covered Forest, Wastes, Island, Plains, Snow-Covered Plains, Plains,
+        Island, Snow-Covered Plains, Plains, Island, Forest, Plains, Plains.
+            After 5 of Alice’s turns and 4 of Bob’s, the game will end in a draw. Register r1 will have
+        1000 +1/+1 counters on it, the result of the calculation.
+
+           Sample Program 2 Prime Factors
+
+         Symbols     Instruction        Comments
+                      Register usage: r0 : constant 2. r1 : input number remaining to be factorised.
+                 r2 : copy of r1 for divisions. r3 : current divisor. r4 : how many factors found so far.
+           210       AInput 1           Read the input number into r1
+           413       Add1 r3            Initialise divisor to 1
+          10 0 2     NumBuild 2         Initialise r0 to constant 2
+                                              Main loop: test the next number
+           413       Add1 r3            Increment the divisor we’re testing
+           521       Set r2 r1          Prepare to test r1
+           723       DivCeil r2 r3      Divide and check remainder
+           354       JumpBwdF 4         If flag, r3 is not a factor
+                                         Found a factor: store it and the quotient
+           834       Store r3 r4        It is. Save r3 to a new memory slot,
+           414       Add1 r4            and increment number of factors found
+           512       Set r1 r2          Remember the new divided total
+          11 0 2     FLess r2 r0        Is r2 now 1?
+           338       JumpBwdNF 8 If not, continue. There might be another factor of r3 so check it again.
+           400       HaltD              If so, halt
+
+           After execution finishes, there will be one memory entry for each prime factor in the
+        input number. For example, if Alice chooses 120, the program finishes after 57 turn cycles,
+        and memory consists of {2, 2, 2, 3, 5}.
+Howe C. Y. and A. Churchill                                                                     18:17
+
+
+  Sample Program 3 Collatz (3n + 1)
+
+ Symbols   Instruction                Comments
+                  Register usage: r0 : built numbers. r1 , r2 , r3 : constants 1, 2, 3.
+                       r4 : source of the current chain. r6 : temp read memory.
+                 r7 : current number being checked. r8 : either half r7 or 3r7 + 1.
+   411     Add1 r1                    Initialise r1 to 1
+  10 0 2   NumBuild 2                 Create constant 2
+   520     Set r2 r0                  Store constant 2 in r2
+  10 0 3   NumBuild 3                 Create constant 3
+   530     Set r3 r0                  Store constant 3 in r3
+  10 4 2   NumBuild 12 × 4 + 2 Start searching at 50
+   540     Set r4 r0                  Initialise current search root
+   574     Set r7 r4                  Start checking at current search root
+                                Label 0: we have a new r7 to investigate
+  11 2 7   FLess r7 r2                Is r7 = 1?
+  10 1 4   NumBuild 12 × 1 + 4 Create longjump distance 16
+   340     JumpFwdF r0                If so, jump to label 3
+   967     Load r6 r7                 Load memory r7 into r6
+  11 6 6   FIsZero r6                 Is this a new number?
+   343     JumpFwdF 3                 If so, go to label 1
+  11 2 6   FLess r6 r2                Is this a number that we know gets to 1?
+  3 4 11   JumpFwdNF 1                If so, jump to label 3
+   402     HaltB                      If not, we’ve found a loop and disproved the Collatz conjecture!
+                             Label 1: r7 is a number we’ve not seen before
+  587      Set r8 r7                  Prepare to halve r8
+  428      Halve r8                   Halve r8 . Did that leave remainder?
+  323      JumpFwdNF 3                If not, r8 is what we want at Label 2
+  587      Set r8 r7                  Set r8 to r7 ...
+  638      Mult r8 r3                 ...×3...
+  418      Add1 r8                    ...+1.
+                             Label 2: r8 is the next number in the sequence
+   887     Store r7 r8                Store r7 in memory r8
+   578     Set r7 r8                  Now investigate r8
+  10 1 7   NumBuild 12 × 1 + 7 Create longjump distance 19
+   310     JumpBwd r0                 Go back to label 0
+                   Label 3: A number r4 got down to 1. Label the chain with 1s.
+   574     Set r7 r4                  Restart at r4
+   967     Load r6 r7                 Load memory r7 into r6
+  11 2 6   FLess r6 r2                Is r6 = 1?
+   343     JumpFwdF 3                 If so, skip to end of the loop
+   817     Store r7 r1                Save 1 into r7
+   576     Set r7 r6                  Set r7 to the number we read
+   316     JumpBwd 6                  Go back 6
+   414     Add1 r4                    We’re done with r4 ’s chain. Next number!
+   307     JumpFwd 7                  Loop around to just before label 0
+
+
+
+
+                                                                                             FUN 2024
+18:18   A Programming Language Embedded in Magic: The Gathering
+
+
+          Sample Program 4 Nim
+
+            Symbols Instruction              Comments
+                  Register usage: r0 built numbers. r1 number of piles. r2 loop index.
+                 r4 current player. r5 chosen pile. r6 pile value. r7 number to remove.
+                r8 temp comparison. r9 constant long jump distance 27. r11 constant 1.
+                                             Initialise variables
+             10 0 1     NumBuild 0 1         r0 =1
+             5 11 0     Set r11 r0           r11 =1
+             10 2 3     NumBuild 2 3         r0 =2 ∗ 12 + 3=27
+             590        Set r9 r0            r9 =27
+                                     Initialise: Input number of piles
+             210        AInput r1            Ask A for number of piles N
+                               Loop asking Alice for initial values of piles
+             5 2 11     Set r2 r11           Initialise r2 to 1
+                                    Label 0: input one initial pile size
+             260        AInput r6            Ask A for count of pile r2
+             862        Store r2 r6          Save r6 into memory r2
+             412        Add1 r2              Increment r2
+             11 2 1     FLess r1 r2          If r2 is still ≤ r1 ,
+             335        JumpBwdNF 6          jump back to label 0
+
+              544      Zero r4          Set current player to A
+                                    Label 1: Main game loop
+                                  Toggle current player r4 =1−r4
+             144       Sub1 r4          r4 −= 1
+             321       JumpFwdNF 1      Jump forward 1 if subtraction didn’t go negative
+             5 4 11    Set r4 r11       Set r4 to 1
+
+                         Label 2: Ask current player which pile to take from
+             11 4 4    FIsZero 4         Is r4 = 0?
+             322       JumpFwdNF 2       Jump forward 2 if not
+             250       AInput r5         If r4 is 0, ask Alice a pile number
+             301       JumpFwd1          Only if r4 is >0,
+             251       BInput r5         Ask Bob a pile number
+                                    Ensure that pile’s not empty
+              965      Load r5 r6        Load memory r5 into r6
+              166      Sub1 r6           Is r6 0?
+              358      JumpBwdF 8        If so, jump back to label 2 (−8)
+                          Label 3: Ask current player how much to remove
+             965       Load r5 r6        Load memory r5 into r6
+             11 4 4    FIsZero 4         Is r4 = 0?
+             322       JumpFwdNF 2       Jump forward 2 if not
+             270       AInput r7         If r4 is 0, ask Alice a number of sticks
+             301       Jump forward 1 Only if r4 is >0,
+             271       BInput r7         Ask Bob a number of sticks
+                                       Check they didn’t say 0
+             11 7 7    FIsZero r7        Is r7 = 0?
+Howe C. Y. and A. Churchill                                                                     18:19
+
+
+      Symbols    Instruction         Comments
+       358       JumpBwdF 8          If so, jump back to L3 (−8)
+                               Try to remove r7 from the pile
+        176      Subtract r7 r6      Try to remove r7 from pile r6
+       3 5 10    JumpBwdF 4          If that failed, ask again at L3
+        865      Store r5 r6         Save new pile value in memory r5
+                            Player has successfully taken a turn.
+                        Ensure we have at least one pile remaining
+       5 2 11    Set r2 r11          Initialise r2 =1
+        509      Set r0 r9           Store long-jump distance in r0
+                             Label 4: check if pile r2 still exists
+        962      Load r6 r2          Load memory r2 into r6
+       11 6 6    FIsZero r6          Is this pile’s value 0?
+        330      JumpBwdNF 0         If not, jump back to L1 (r0 long jump)
+        412      Add1 r2             OK, keep looking for a nonempty pile
+        581      Set r8 r1           Has r2 reached the number of piles?
+        128      Subtract r2 r8      See if r2 >number of piles
+        337      JumpBwdNF 7         If not, jump back to L4
+
+                            Game over. Last one to play wins.
+       11 4 4    FIsZero r4       Is r4 0?
+        341      JumpFwdF 1       If so, jump forward 1
+        402      HaltB            Bob wins!
+        401      HaltA            Alice wins!
+
+
+ Appendix B            Implementation of the Programming Instructions
+The detailed explanations provided below are also accessible via our supplementary webpage
+[4], where the content is presented with enhanced readability through dynamic tooltips which
+provide additional information.
+
+B.1       0 Y Z – Add rY rZ – Set rY to rY +rZ .
+   Bob has Halana and Alena, Partners, with added creature types X0 Elf $tr_Y$ , and
+   with P/T set toprotect unhbox voidb@x protect penalty @M  {}0/2.
+    In Bob’s combat phase, the Halana and Alena, Partners triggers. It targets rY , and
+its power is boosted by rZ to the value of rZ , thus adding that value to rY .
+
+B.2       5 Y Z (Y ̸=Z) – Set rY rZ – Set rY to the value of rZ .
+   Bob has Halana and Alena, Partners, with added creature types X5 Elf $tr_Y$ , and
+   with P/T set toprotect unhbox voidb@x protect penalty @M  {}0/2.
+   Alice has an Archpriest of Iona with added creature types X5 YA $tr_Y$ .
+   Alice has a green and black 3/3 Shape Stealer with added creature types X5 YA ,
+         given flying
+          and with a scalebox {0.65}[1.0]{$-$}1/scalebox {0.65}[1.0]{$-$}0 counter on it.
+   She also has a 0/2 Warrior token, a 0/2 Rogue token and a 0/2 Wizard token.
+   This instruction is implemented similarly to the previous one, except that we need to
+erase the previous value of rY before adding the value of rZ .
+
+
+
+                                                                                               FUN 2024
+18:20   A Programming Language Embedded in Magic: The Gathering
+
+
+            To do this, in Alice’s third combat phase, since Alice has a full party, Archpriest of
+        Iona triggers and gives rY flying and +1/+1. The Shape Stealer attacks and is blocked
+        by the register, taking the register’s power as its base power, and the extra 1 is subtracted
+        off, so that its power equals the register’s value. It is given wither because it is black, so the
+        damage is dealt as −1/−1 counters, cancelling out all the +1/+1 counters on the register.
+           In Bob’s combat phase, Halana and Alena, Partners adds rZ +1/+1 counters to rY .
+        (Note that despite having reach, this couldn’t block the Shape Stealer because of the $tr_Y$
+        types, as protection also restricts blocking.)
+
+
+        B.3        5 Y Y – Zero rY – Set rY to zero.
+        When Y and Z are the same, something different happens. Because the register’s value is
+        erased first, it isn’t there to get added in Bob’s combat phase, leaving it with no +1/+1
+        counters.
+
+
+        B.4        1 Y Z (Y ̸=Z) – SubCond rZ rY – If rZ ≥rY , set rZ to rZ −rY and
+                   set the flag to 0. Otherwise, set the flag to 1.
+           Alice has Necrogen Mists given type X1 .
+           Bob has a 1/1 Halfdane with added copiable types X1 $tr_Y$ , given islandwalk, to which
+           is attached a Tanuki Transplanter controlled by Alice.
+           Bob has a 0/1 green and black Furtive Homunculus, with added copiable types X1
+           Elf Dragon tR, and given flying and “Whenever this creature deals combat damage to a
+           player, draw a card.”
+           Alice has a 0/1 Omnath, Locus of Mana, with added creature types X1 , given
+                            .reach and indestructible
+           Bob has a Wrathful Red Dragon, with added creature types X1 and $tr_Z$ , with
+                  flying removed
+                  .
+           Bob has Belligerent Brontodon with added creature type X1 .
+
+          In Bob’s upkeep, Necrogen Mists makes Bob discard the flag card if it’s in hand, and
+        Halfdane triggers and targets rY , taking on its power and toughness.
+           In Bob’s combat phase, Halfdane and Furtive Homunculus attack, and Tanuki
+        Transplanter triggers, giving Alice rY ’s value in green mana, which makes that the power
+        of Omnath, Locus of Mana.
+            The Furtive Homunculus, with rZ power and skulk, is blocked by Omnath, Locus of
+        Mana if rY ≤ rZ . If it blocks, it deals rY damage to the Furtive Homunculus, triggering
+        Wrathful Red Dragon to make the Furtive Homunculus deal rY damage with wither
+        to rZ , reducing its value by rY ; the combat damage from the Furtive Homunculus to
+        Omnath, Locus of Mana is prevented because of the former’s tR type. If it doesn’t block,
+        Belligerent Brontodon ensures that the Furtive Homunculus deals at least 1 damage
+        to Alice even if rZ =0, triggering the added ability to make Bob draw a card and set the flag
+        to 1.
+          The green mana disappears at the end of Alice’s untap step in the next turn, when
+        Omnath, Locus of Mana is no longer active.
+Howe C. Y. and A. Churchill                                                                       18:21
+
+
+B.5       1 Z Z – Sub1Cond rZ – If rZ ≥1, set rZ to rZ −1 and set the flag
+          to 0. Otherwise, set the flag to 1.
+   Bob has a Riders of Gavony with type set to $X_1$ and with text changed to give Rabbit
+   creatures protection from Yetis at timestamp ⃝.
+                                                1
+
+    This is a special case of the previous instruction. This Riders of Gavony gives protection
+fron Yetis to all the registers, but only rZ gets to keep it after Blood Sun removes abilities
+from lands. If Y = Z, this leaves the Halfdane from the previous section with no legal
+targets for its ability, and its power remains 1, making 1 the value to be subtracted.
+
+
+B.6       6 Y Z – Mult rZ rY – Set rZ to rY ×rZ .
+   Alice has an Archpriest of Iona with added creature types X6 YA $tr_Y$ .
+   Alice has a 2/2 indestructible Smog Elemental with added creature types X6 YA .
+   Alice has a Wrathful Red Dragon with added creature types X6 tU, with
+            and edited to trigger on Elementals.
+            flying removed
+   Alice has another Wrathful Red Dragon, this one with added creature types X6 $tr_Z$ ,
+   also with flying removed.
+   Bob has a blue indestructible Hornet Nest with type X6 and edited to create Elf tokens.
+   Bob has a 1/1 Phantom Steed given islandwalk, edited to add type Elf to the token,
+   and exiling a War Elemental.
+   Alice has a 0/1 indestructible blue, black and red Tocatli Honor Guard with
+                  X6 Dragon.
+                 added creature types
+   Alice has a Ward Sliver naming green, edited to give Elementals protection from green,
+   and with added creature type X6 .
+   Bob has a green and blue Resourceful Defense given types X6 $tr_Z$ .
+
+    In Alice’s third combat phase, Archpriest of Iona triggers and gives rY flying and
++1/+1; the +1/+1 gets cancelled out by the −1/−1 from Smog Elemental.
+    The Smog Elemental attacks and gets blocked by rY . It receives the value of rY in
+damage. This triggers the first Wrathful Red Dragon to make it deal the same amount of
+damage to the Hornet Nest, which produces rY 1/1 green Elf creature tokens with flying
+and deathtouch. Affected by the Smog Elemental and rZ , their power and toughness are
+equal to rZ ’s value. (If that’s 0, they die immediately.)
+    In Bob’s combat phase, those Elf tokens attack, along with the Phantom Steed, which
+creates an attacking Elf token copy of War Elemental; Tocatli Honor Guard suppresses
+its enters-the-battlefield trigger. That token is given protection from green by the Ward
+Sliver, so the Tocatli Honor Guard is the only creature that can block it, and does so;
+the protection also stops it from being targeted later.
+    In the combat damage step, the War Elemental token deals rZ + 1 damage to the
+Tocatli Honor Guard, triggering the second Wrathful Red Dragon to make it deal the
+same amount of damage with wither to rZ , which leaves it with one −1/−1 counter; the Elf
+tokens are reduced to 0 toughness and die. The Phantom Steed and the Elf tokens deal
+their damage to Alice, triggering the War Elemental to get rY × rZ + 1 +1/+1 counters.
+    At the end of combat, the War Elemental token is sacrificed, triggering Resourceful
+Defense, which targets rZ (being blue stops it from targeting Bob’s Sterling Grove) to
+put rY × rZ + 1 +1/+1 counters on it; one gets cancelled out and its new value is rY × rZ .
+
+
+
+                                                                                                 FUN 2024
+18:22   A Programming Language Embedded in Magic: The Gathering
+
+
+        B.7        7 Y Z – DivCeil rY rZ – Set rY to ⌈rY /rZ ⌉. If the division was
+                   exact, set the flag to 0, otherwise set it to 1. If rZ = 0 or Y = Z,
+                   this is undefined behaviour.
+           Alice has a Sporemound with added creature types X7 YA edited to create a blue Volver
+           token.
+           Alice has Engineered Plague given type X7 affecting Volvers.
+           Alice has a Chief of the Scale with added creature types X7 YA edited to affect Volvers.
+           Alice has an Archpriest of Iona with added creature types X7 YA $tr_Y$ .
+           Alice has a 3/3 green and black Shape Stealer with added creature types X7 YA , given
+           flying and indestructible and with a scalebox {0.65}[1.0]{$-$}1/scalebox {0.65}[1.0]{$-$}0 counter on it.
+           Bob has a Questing Beast with added creature type X7 .
+           Bob has a Wrathful Red Dragon with added creature types X7 tU, edited to trigger
+           on Rabbits, with flying removed.
+           Alice has a Vigor with added creature types X7 YA .
+           Alice has a Necrogen Mists given type X7 .
+           Bob has a nontoken Progenitor Mimic copying Polyraptor with added copiable types
+           Elf Sand, copiably made a 0/0 creature, with type noncopiably set to X7 , and with a
+           +1/+1 counter on it.
+           Bob has a Gruul Ragebeast with added creature types X7 tU.
+           Bob has a Sliver Hivelord with type noncopiably set to X7 edited to affect Sands.
+           Bob has a -1/2 Halana and Alena, Partners with added creature types X7 $tr_Y$ , to
+           which is attached Bob’s Raised by Wolves edited to count Sands.
+           Bob has Aegar, the Freezing Flame with type noncopiably set to X7 edited to trigger
+           on Sands.
+
+             In Alice’s third combat phase, Archpriest of Iona triggers and targets rY . Then Shape
+        Stealer attacks, along with the regular attackers. The new program permanent entering
+        the battlefield triggers Sporemound, which creates a 1/1 blue Volver. It has −1/−1 from
+        Engineered Plague and +0/+1 from Alice’s Chief of the Scale.
+             As we’ve seen before, rY blocks the Shape Stealer, and the Shape Stealer takes on
+        rY ’s power and toughness. Shape Stealer deals rY ’s value in damage with wither to rY .
+        Bob’s Wrathful Red Dragon triggers and targets the blue Volver token. Alice’s Vigor
+        turns this damage into +1/+1 counters so the blue Volver has rY +1/+1 counters on it, and
+        rY is reset to 0. (rY ’s damage to the Shape Stealer can’t be prevented by Vigor because
+        of Bob’s Questing Beast, but Shape Stealer is indestructible. Wrathful Red Dragon’s
+        damage is still affected by Vigor because Questing Beast only affects combat damage.)
+             In Bob’s turn, Alice’s Vigor and Chief of the Scale become inactive. In his upkeep,
+        both his Progenitor Mimic and Alice’s Necrogen Mists trigger. APNAP order means
+        first, Necrogen Mists makes him discard his card if he has one.
+             Then Progenitor Mimic creates him a Polyraptor token with power and toughness
+        each rZ . Gruul Ragebeast triggers and makes the Polyraptor token fight Alice’s Volver,
+        dealing rZ damage to it. Sliver Hivelord means the Polyraptor is indestructible, but it
+        still takes damage from the Volver, so its ability triggers. This creates a new indestructible
+        Polyraptor which again triggers Gruul Ragebeast, and this continues until the Volver has
+        taken enough damage to die. At that point there are no legal targets for Gruul Ragebeast’s
+        ability so the loop stops. We will always have ⌈rY /rZ ⌉ + 1 Polyraptors created this way. If
+        the last instance of damage was excess damage – i.e. there’s a remainder from the division –
+        then Aegar, the Freezing Flame will make Bob draw a card, setting the flag.
+Howe C. Y. and A. Churchill                                                                                               18:23
+
+
+   At the beginning of combat on Bob’s turn, Halana and Alena, Partners triggers
+targeting rY and gives it a number of +1/+1 counters equal to one less than the number of
+Sand tokens, which works out as ⌈rY /rZ ⌉.
+   Once Bob’s turn ends, all the registers will be inactive, so Bob’s Elf Sand tokens will no
+longer have anything increasing their toughness, and they automatically die.
+
+B.8         8 Y Z – Store rZ rY – Store the value of rY at memory address
+            rZ .
+   Bob has a Halfdane with added creature types X8 $tr_Y$ , given islandwalk and trample.
+   Alice has a Godhead of Awe with added creature type X8 , timestamp ⃝      0 with
+           flying removed
+           .
+   Bob has a Wandering Wolf with added creature types X8 Elf, given
+                .flying and indestructible
+   Bob has Behind the Scenes given type X8 .
+   Bob has Spinneret Sliver with type set to X8 but edited to affect Mouse creatures.
+   Bob has Quartzwood Crasher with added creature type X8 edited to create Mouse
+   tokens.
+   Bob has a 2/2 Arwen, Weaver of Hope with added creature types X8 Elf.
+   Alice has a green and black Aether Flash given type X8 , to which is attached a
+   Charisma controlled by Alice.
+
+    In Bob’s upkeep, Halfdane targets rY and takes on its power and toughness. (Note that
+the Godhead of Awe has an early timestamp of ⃝,    0 so it doesn’t affect the final power and
+toughness of the registers, which have their base power and toughness set at ⃝ 1 and possibly
+later.)
+    In Bob’s combat phase, the Halfdane and Wandering Wolf attack. The Wandering
+Wolf has rZ + 1 power, and its own ability plus skulk from Behind the Scenes together
+mean that it can be blocked only by creatures with exactly the same power; thus, the existing
+memory token for address rZ blocks if it exists (given reach by Spinneret Sliver).
+    Combat damage is dealt; the blocking memory token (if present) is dealt exactly enough
+damage to be destroyed. Halfdane deals rY damage to Alice and triggers Quartzwood
+Crasher if that’s nonzero, which produces a Mouse creature token with that power and
+toughness. Arwen, Weaver of Hope adds rZ + 2 +1/+1 counters to it. Aether Flash
+triggers and deals 2 damage with wither to the token, cancelling out the extra two +1/+1
+counters and triggering Charisma to give Alice control of it.
+
+B.9         9 Y Z – Load rY rZ – Load the value at memory address rZ into
+            rY .
+   Bob has Archpriest of Iona with added creature types X9 $tr_Y$ .
+   Bob has a Dream Fighter with added creature types X9 Sliver tR, given flying.
+   Bob has a 2/2 Wandering Wolf with added creature types X9 Elf Dragon, given
+                                                         to which is attached a Skeleton Key controlled by Bob.
+                                                     ,flying and indestructible
+   Alice has a Godhead of Awe with added creature types X9 Sliver, timestamp ⃝,                                 0 with
+   flying removed but granted reach instead.
+   Alice has a green and black Shape Stealer with added creature types X9 tR and reach,
+   with a scalebox {0.65}[1.0]{$-$}1/scalebox {0.65}[1.0]{$-$}0 counter on it.
+   Bob has Spinneret Sliver with type set to X9 but edited to affect Mouse creatures.
+
+
+
+                                                                                                                         FUN 2024
+18:24   A Programming Language Embedded in Magic: The Gathering
+
+
+           Bob has Serpent of Yawning Depths with type X9 but edited to affect creatures with
+           type Rabbit or tR.
+           Bob has Field Marshal with type X9 but edited to affect Mouse creatures.
+           Alice has Questing Beast with type X9 .
+           Bob has a blue 1/1 Vigor with added creature types X9 Elf given indestructible.
+           Bob has a Wrathful Red Dragon with types X9 tU and flying removed.
+           Alice has Toralf, God of Fury with added creature types X9 $tr_Y$ .
+           Alice has Gideon’s Intervention with type X9 naming Wandering Wolf.
+
+            In Bob’s combat phase, the Archpriest of Iona gives +1/+1 and flying to rY . That
+        register attacks, along with the Dream Fighter and the Wandering Wolf . (The Dream
+        Fighter has been given the type tR to stop it from blocking the creatures of the conditional
+        mechanism in Alice’s turn.)
+            In the declare blockers step, the Godhead of Awe blocks the Dream Fighter, because
+        those are given shadow by the Shadow Sliver. The Shape Stealer blocks rY ; it can only
+        block red creatures because of its tR type, and it is the only creature that can block rY
+        because of the Serpent of Yawning Depths. Finally, the Wandering Wolf , because of
+        its own ability and skulk from Skeleton Key, can only be blocked by creatures with exactly
+        the same power. Its power is rZ + 2, and each memory token (given reach by Spinneret
+        Sliver, and affected by Godhead of Awe and Field Marshal) has power equal to 2 plus
+        its address, so the one with address rZ blocks if it exists.
+            This blocking triggers two abilities: the Shape Stealer takes on rY ’s power as its base
+        power, ending up with rY ’s value as its power, and the Dream Fighter phases out itself
+        and the Godhead of Awe, which, most importantly, uncovers the original base power and
+        toughness of the memory tokens.
+            The blocking memory token (if it exists), given first strike and +1/+1 by Field Marshal,
+        deals its damage first, dealing address + value + 1 damage to the Wandering Wolf ;
+        Questing Beast stops Vigor from preventing this damage. Wrathful Red Dragon
+        triggers and targets Vigor, making Wandering Wolf deal the same amount of damage to
+        it (it does not prevent damage to itself). The Vigor’s toughness is rZ + 1, so if the value
+        is greater than zero this triggers Toralf, God of Fury to deal the value in damage to rY ;
+        this damage is not combat damage so it is prevented by Vigor, adding the value in +1/+1
+        counters to rY .
+            In the regular combat damage step, the Shape Stealer deals its damage with wither to
+        rY (again, Questing Beast stops Vigor from preventing it), subtracting off its original
+        value and leaving just the memory value. Gideon’s Intervention prevents the damage from
+        Wandering Wolf , stopping it from killing the memory token or triggering the Skeleton
+        Key’s second ability.
+
+        B.10        2 Y 1 – BInput rY – Set rY to a nonnegative integer of Bob’s
+                    choice.
+           Alice has Archpriest of Iona with added creature types X2 YA $tr_Y$ .
+           Alice has a green and black 3/3 Shape Stealer with added creature types X2 YA ,
+                 given flying
+                  and with a scalebox {0.65}[1.0]{$-$}1/scalebox {0.65}[1.0]{$-$}0 counter on it.
+           Alice has a 0/4 Questing Beast with added creature types X2 Dragon given
+                               .reach and indestructible
+           Alice has a blue Wrathful Red Dragon with added creature types X2 $tr_Y$ with
+                    flying removed
+Howe C. Y. and A. Churchill                                                                                        18:25
+
+
+    Bob has Vigor with added creature type X2 .
+    Bob has a nontoken Progenitor Mimic copying Volcano Hellion with
+          X2 Z1 tU, copiably made a 0/0 artifact creature, with a +1/+1 counter on it.
+          added copiable types
+We start by clearing the value of rY , in a way we’ve seen before, by giving it flying and having
+it block a Shape Stealer; Questing Beast stops Vigor from preventing the damage. This
+part is shared between multiple instructions that start with card 2.
+    In Bob’s upkeep, the Volcano Hellion produces a copy of itself, which dies immediately
+and targets the Wrathful Red Dragon with its ability. Bob gets to choose how much
+damage it deals to him and to the Wrathful Red Dragon, which triggers (if the amount is
+nonzero) and targets rY ; that damage is turned into +1/+1 counters by Vigor.
+    (The unpreventability of Volcano Hellion’s damage is the reason for the indirection
+through the Wrathful Red Dragon. However, unpreventability doesn’t stop Worship
+from modifying the result of the damage dealt to Bob.)
+
+
+B.11          2 Y 0 – AInput rY – Set rY to a nonnegative integer of Alice’s
+              choice.
+   Alice has a Volcano Hellion with added copiable types X2 Z0 tU,
+                     ,copiably made a 0/0 artifact creature
+                       with a +1/+1 counter on it, and noncopiably coloured red and with
+    added creature type Dragon.
+   Alice has Artificer Class at level 3 given types X2 Z0 tR.
+This is similar to the previous instruction, but it’s a little more complicated because Alice’s
+upkeep is not usable. This time, Artificer Class is used to make the copy of Volcano
+Hellion in Alice’s end step, and the rest proceeds similarly to before; the “isn’t a Dragon”
+targeting criterion of Wrathful Red Dragon stops it from targeting this Volcano Hellion.
+
+
+B.12          2 Y 2 – SetF rY – Set rY to the flag’s value.
+    Bob has Syr Elenora, the Discerning with added creature types X2 Z2 given flying.
+Syr Elenora, the Discerning attacks and gets blocked by the Questing Beast from B.10.
+If the flag is 1, it deals 1 damage and triggers the Wrathful Red Dragon, which adds 1 to
+rY as before.
+
+
+B.13          2 Y 3 – SetNF rY – Set rY to the Boolean negation of the
+              flag’s value (1 if it’s 0 and vice versa).
+   Bob has a 1/1 Slithering Shade with added creature types X2 Z3 .
+The Slithering Shade attacks if the flag is 0, making rY 1 as before.
+
+
+B.14          2 Y 4 – Rand6 rY – Set rY to a uniformly random nonnegative
+              integer less than 6.
+    Bob has a scalebox {0.65}[1.0]{$-$}1/1  Suntail Hawk with added creature types X2 Z4 , to which is attached
+    a Strength-Testing Hammer.
+The Suntail Hawk attacks, and the Strength-Testing Hammer triggers and increases
+its power to the required random number. Vigor’s 6 power ensures that the “draw a card”
+effect never happens.
+
+
+
+                                                                                                                  FUN 2024
+18:26   A Programming Language Embedded in Magic: The Gathering
+
+
+        B.15          2 Y 5 – Rand20 rY – Set rY to a uniformly random nonnegative
+                      integer less than 20.
+           Bob has an Ancient Gold Dragon with types set to X2 Z5 edited to create Sand
+           tokens, given islandwalk and first strike.
+           Bob has a scalebox {0.65}[1.0]{$-$}1/1  Rat Colony with types set to X2 Z5 , edited to count Sand creatures,
+           and given flying.
+           Bob has a Goblin Pyromancer with types set to X2 Z5 edited to affect Sand creatures.
+        The Ancient Gold Dragon and Rat Colony attack, and the Rat Colony is blocked
+        by the Questing Beast. The Ancient Gold Dragon first deals its damage to Alice and
+        randomly produces 1-20 Sand tokens, which increase the Rat Colony’s power to the required
+        random number, and it then deals its damage, which goes into rY ’s value as before. In Bob’s
+        end step, Goblin Pyromancer gets rid of the Sand tokens.
+
+        B.16          4 0 0 – HaltD – End the game in a draw.
+           Bob has a Celestial Convergence given types X4 Y0 with 1 omen counter on it.
+        Celestial Convergence triggers in Bob’s upkeep, removes its last omen counter, and
+        compares life totals. Both players’ life totals are 1, so the game ends in a draw.
+
+        B.17          4 0 1 – HaltA – End the game with Alice winning.
+           Alice has an Alert Heedbonder with added creature types X4 Y0 Z1 .
+        Alert Heedbonder triggers in Alice’s end step and Alice gains 1 life from it counting itself,
+        and then Alice wins from the Celestial Convergence trigger.
+
+        B.18          4 0 2 – HaltB – End the game with Bob winning.
+           Alice has a Spiritual Sanctuary given types X4 Y0 Z2 , edited to count Forests.
+        Spiritual Sanctuary triggers in Bob’s upkeep; APNAP order means that trigger goes on
+        top of the Celestial Convergence trigger, and resolves first. Bob does control a Forest, so
+        Bob gains 1 life, and wins from the Celestial Convergence trigger.
+
+        B.19          4 1 Z – Add1 rZ – Set rZ to rZ + 1.
+          Bob controls a 1/1 Halana and Alena, Partners with added creature types X4 Y1
+          $tr_Z$ .
+        Halana and Alena, Partners targets rZ and adds one +1/+1 counter to it.
+
+        B.20          4 2 Z – Halve rZ – Set rZ to half the value of rZ , rounding
+                      down. Set the flag to the remainder from the division.
+            Alice has a 1/1 Abyssal Specter with added creature types X4 Y2 given first strike.
+            Alice has a 2/2 green and black Catacomb Dragon with added creature types X4 Y1
+            tR.
+            Bob has a 0/1 blue Taii Wakeen, Perfect Shot with added creature types X4 Y2 Elf
+            given reach and indestructible.
+            Alice has a Wrathful Red Dragon with added creature types X4 Y2 $tr_Z$ with
+                    flying removed
+                    .
+            Bob has a Wrathful Red Dragon with added creature types X4 Y2 tU with
+                    flying removed
+                    , edited to trigger on Rabbits.
+Howe C. Y. and A. Churchill                                                                           18:27
+
+
+In Alice’s third combat phase, the Catacomb Dragon and Abyssal Specter attack, in
+addition to the conditional mechanism’s creatures. The Catacomb Dragon is blocked by
+Taii Wakeen, Perfect Shot.
+    By APNAP order, the trigger from Bob’s Dream Fighter in the conditional mechanism
+(subsection 4.4) is put on top of the Catacomb Dragon’s trigger on the stack, and thus
+resolves first; therefore, by the time the Catacomb Dragon’s trigger resolves, rZ is active
+and is adding its value to the power and toughness of Taii Wakeen, Perfect Shot.
+    Let’s say the value is V . The Catacomb Dragon subtracts ⌊V /2⌋ from Taii Wakeen,
+Perfect Shot’s power, leaving V − ⌊V /2⌋ = ⌈V /2⌉ power.
+    In the first combat damage step, the Abyssal Specter deals its damage to Bob, and
+triggers to make Bob discard a card, setting the flag to 0.
+    In the second combat damage step, the Catacomb Dragon’s damage is prevented
+because of its tR type, and Taii Wakeen, Perfect Shot deals ⌈V /2⌉ damage. That damage
+triggers Alice’s Wrathful Red Dragon, which targets rZ and makes Catacomb Dragon
+deal ⌈V /2⌉ damage to it with wither, reducing its value to V − ⌈V /2⌉ = ⌊V /2⌋.
+    That damage, in turn, triggers Bob’s Wrathful Red Dragon, which targets Taii
+Wakeen, Perfect Shot and makes rY deal ⌈V /2⌉ damage to it. This damage is checked
+against its current toughness of ⌊V /2⌋+1 (but does not destroy it because it has indestructible).
+If V is odd, the values are equal, triggering Taii Wakeen, Perfect Shot to make Bob draw
+a card, which sets the flag to 1.
+
+B.21        10 Y Z – NumBuild (12Y + Z) – Set r0 to 12Y + Z, except if
+            the last instruction that was executed was also a NumBuild
+            instruction, in which case multiply r0 by 144 and add 12Y + Z
+            to it.
+   Alice has an Excruciator with added creature types X10 XA , given flying, indestructible
+   and vigilance.
+   Alice has a 2/2 blue Dream Fighter with added creature type X10 , given flying and
+    protection from red.
+   Bob has Vigor with added creature types X10 tU given reach and islandwalk.
+   Bob has Khorvath Brightflame with added creature type X10 , with flying removed,
+   and edited to affect Rhinos.
+   Bob also has Sylvia Brightspear with added creature type X10 , edited to affect Rhinos.
+   Alice has a 0/1 green and black Mangara’s Equity with added creature types X10
+    Nomad, given reach, naming red, and edited to trigger on damage to green creatures.
+   Alice has a 0/2 Darksteel Myr with added creature types X10 Y0 .
+   Alice has a 12/2 Darksteel Myr with added creature types X10 Y1 .
+   Alice has a 24/2 Darksteel Myr with added creature types X10 Y2 .
+   ..
+    .
+   Alice has a 132/2 Darksteel Myr with added creature types X10 Y11 .
+   Bob has Ojutai, Soul of Winter with added creature types X10 tU, with flying removed,
+   edited to trigger on Rhinos.
+   Bob has Angrath’s Marauders with added creature types X10 ZA .
+   Alice has a Kangee, Aerie Keeper with flying removed, with added creature type Z1 ,
+   edited to affect Nomads, and with one feather counter.
+   Alice has a Kangee, Aerie Keeper with flying removed, with added creature type Z2 ,
+   edited to affect Nomads, and with two feather counters.
+
+
+
+                                                                                                     FUN 2024
+18:28   A Programming Language Embedded in Magic: The Gathering
+
+
+           Alice has a Kangee, Aerie Keeper with flying removed, with added creature type Z3 ,
+            edited to affect Nomads, and with three feather counters.
+           ..
+            .
+             Alice has a Kangee, Aerie Keeper with flying removed, with added creature type Z11 ,
+             edited to affect Nomads, and with eleven feather counters.
+             Bob has a Angrath’s Marauders with added creature types X10 ZA .
+        As its name suggests, this instruction can be used repeatedly to build any nonnegative integer
+        value in r0 , two base-12 digits at a time.
+             If X10 was read in Alice’s first combat phase, then in her second combat phase, Ex-
+        cruciator and Dream Fighter attack. Vigor blocks Dream Fighter (its tU type stops
+        it from blocking Excruciator), which triggers to phase both out. r0 , given flying (and
+        haste) by Khorvath Brightflame and double strike by Sylvia Brightspear, blocks the
+        Excruciator (Dream Fighter’s protection from red stops r0 from blocking it). In the first
+        combat damage step, r0 deals its value in damage, triggering Mangara’s Equity to deal
+        the same amount of damage back to it with wither, resetting its value to 0. (r0 then deals
+        no damage in the second combat damage step.)
+             In Alice’s third combat phase, Excruciator attacks again and is again blocked by r0 .
+        r0 ’s value remains 0. (This behaviour will be modified later in a special case.)
+             In Bob’s untap step, Vigor phases back in. In Bob’s combat phase, r0 and Vigor attack.
+        r0 gets blocked by whichever of the twelve Darksteel Myr is active, depending on the value
+        of Y ; that one has base power 12Y .
+             For each nonzero value of Z, a different Kangee, Aerie Keeper adds the value of Z to
+        the power and toughness of Nomads, which includes the Darksteel Myr, so that its power
+        is 12Y + Z, which gets added to r0 ’s value because of Vigor. Note that these Kangee,
+        Aerie Keepers are not conditional on anything other than Z; they will also be used by
+        some other instructions to affect Nomads.
+             If another NumBuild instruction is executed next, Bob’s Vigor will still be tapped and
+        thus will be unable to block Dream Fighter, so it will not phase out and will convert the
+        damage from Mangara’s Equity into +1/+1 counters on r0 . (However, Excruciator’s
+        damage can’t be prevented.) So across the two combat damage steps, instead of r0 ’s value
+        being reset to 0, it will be doubled twice, from V to 4V . In Alice’s third combat phase,
+        Angrath’s Marauders doubles the damage dealt by r0 , so its value gets tripled in each of
+        the combat damage steps, going from 4V to 36V . Finally, in Bob’s combat phase, the value
+        gets doubled twice and gets 12Y + Z added, going from 36V to 144V + 12Y + Z.
+
+
+        B.22        3 0 Z (Z̸=0) – JumpFwd Z – Jump forward by Z instructions
+                    (=3Z cards).
+           Bob has a 0/1 blue and black Fiery Emancipation with added creature types X3
+           Dragon Nomad, given flying, indestructible and first strike.
+           Bob has a 0/1 green and black Chains of Mephistopheles given types artifact X3
+           Sliver, given islandwalk, to which is attached Alice’s Moonsilver Spear edited to create
+           Scarecrow tokens.
+           Alice has a green, blue and red Reaper King with added creature types X3 tR tU.
+           Alice has a Spellbane Centaur with added creature types X3 edited to prevent targeting
+           by red sources.
+           Alice has a Shadow Sliver with added creature types X3 Y0 edited to affect Dragons.
+Howe C. Y. and A. Churchill                                                                           18:29
+
+
+   Alice has a 0/1 Melira’s Keepers with added creature types X3 Sliver tU, given reach,
+   indestructible and lifelink, to which is attached Spiteful Shadows.
+   Alice has a green and black Empyrial Archangel with added creature types X3 Dragon,
+   with flying removed, given indestructible.
+   Alice has a Lich given type X3 .
+Recall that the program is a cyclic sequence of cards. To advance through the program, we
+need to rotate that sequence. The first obstacle is that the sequence isn’t all in one place:
+one of the cards is on the battlefield, while the rest are in Alice’s library. Let’s fix that.
+    In Bob’s combat phase, Fiery Emancipation, and Chains of Mephistopheles attack,
+triggering Moonsilver Spear. Alice creates a 4/4 white Scarecrow token with flying. It
+triggers Reaper King, which targets the program permanent; being blue stops it from
+targeting Bob’s Sterling Grove, and Spellbane Centaur stops it from targeting the
+Scarecrow token. This destroys the program permanent, sending it to the bottom of Alice’s
+library (because of Wheel of Sun and Moon). Next turn, the Scarecrow token will be
+Alice’s target for the Vaevictis Asmadi, the Dire that advances the program (because it
+isn’t green, red, or blue), in place of the program permanent. (It will also attack at the same
+time, but is sacrificed before blockers are declared.)
+   Now that the program is all in Alice’s library, we can rotate it by milling that library
+– but only one card at a time, otherwise Alice will get to choose the order in which the
+cards are placed at the bottom of the library. We will do this by making Alice draw cards –
+the rules force this to be done one at a time (rule 121.2 [5]) – and then using Chains of
+Mephistopheles to replace each card draw with a 1-card mill.
+   The Fiery Emancipation is given shadow by the Shadow Sliver, so the Melira’s
+Keepers (which also has shadow) blocks it; the tU type stops it from blocking the Chains
+of Mephistopheles.
+    The Fiery Emancipation has power Z (because it’s a Nomad), and triples its own
+damage to 3Z. This damage is dealt with wither, but the ability of the Melira’s Keepers
+stops it from getting −1/−1 counters (but the damage itself is still dealt). The damage
+triggers Spiteful Shadows, which makes the Melira’s Keepers deal 3Z damage to Alice,
+which the Empyrial Archangel redirects to itself. This damage is dealt with lifelink, and
+Alice’s Lich replaces the life gain with drawing cards; Chains of Mephistopheles replaces
+each card draw with a 1-card mill, advancing 3Z cards through the program.
+   (The ability counters on the Melira’s Keepers were placed while its abilities were
+removed by Blood Sun. Alice had a Platinum Angel when Lich’s abilities were removed,
+then gained 1 life.)
+
+
+
+B.23        3 0 0 – JumpFwd r0 – Jump forward by r0 instructions
+            (=3×r0 cards).
+
+   Bob has a 0/1 blue and black Akron Legionnaire with added creature types X3 Z0
+   Dragon Elf, given flying, indestructible and first strike.
+This is a special case of the previous instruction, jumping by r0 instructions when Z = 0.
+   When Z = 0, the Akron Legionnaire stops the Fiery Emancipation from attacking,
+and it attacks instead. It is given similar characteristics, but has the creature type Elf instead
+of Nomad, thus having power r0 , which is used as the jump distance instead of Z.
+
+
+
+                                                                                                     FUN 2024
+18:30   A Programming Language Embedded in Magic: The Gathering
+
+
+        B.24        3 1 Z – JumpBwd Z ′ – Jump backward by Z ′ instructions
+                    (=3Z ′ cards).
+
+        As with the previous instruction, if Z = 0, Z ′ is r0 , and otherwise, Z ′ is Z. Backward jumps
+        by more than P cards do nothing. P is usually equal to the length of the program in cards;
+        it is the first multiple of the length that is at least 6.
+           Alice has a Joraga Warcaller with added creature type X3 , edited to affect Scarecrows,
+           and with P − 5 +1/+1 counters on it.
+           Alice has a Justice with added creature type X3 , given lifelink and edited to trigger on
+           white creatures.
+           Alice has a Rotlung Reanimator with type noncopiably set to X3 , edited to trigger
+           on Scarecrows dying to create white Sand tokens.
+
+           In Bob’s combat phase, the attacking creatures are the same as before. However, because
+        the Shadow Sliver from B.22 is not active, the attacking Fiery Emancipation or Akron
+        Legionnaire is not given shadow. Instead of being blocked by the Melira’s Keepers, it is
+        blocked by the Scarecrow token (which has flying).
+            In the first combat damage step, the Fiery Emancipation or Akron Legionnaire
+        deals Z ′ damage with wither to the Scarecrow token. The Scarecrow’s power was P (base 4,
+        then boosted by Reaper King and this P − 5 Joraga Warcaller), so after wither damage
+        it’s reduced to P − 3Z ′ .
+            In the second combat damage step, the Scarecrow token deals P − 3Z ′ damage to the
+        creature it is blocking. Justice triggers from that damage, dealing the same amount of
+        damage, redirected to the Empyrial Archangel, with lifelink. As before, Lich replaces the
+        life gain, and Chains of Mephistopheles replaces each card draw, to advance P − 3Z ′
+        cards through the program.
+            If the jump distance exceeds P , the Scarecrow token is killed. Rotlung Reanimator
+        triggers, making a white Sand token in its place as the target for Vaevictis Asmadi, the
+        Dire next turn.
+
+
+
+        B.25        3 2 Z – JumpFwdNF Z ′ – Jump forward by Z ′ instructions
+                    (=3Z ′ cards) if the flag is 0/false.
+
+        B.26        3 3 Z – JumpBwdNF Z ′ – Jump backward by Z ′ instructions
+                    (=3Z ′ cards) if the flag is 0/false.
+
+           Alice has a 1/1 Blinding Angel with added creature types X3 Y2 .
+           Alice has a 1/1 Blinding Angel with added creature types X3 Y3 .
+           Bob has a 0/3 Meishin, the Mind Cage given types X3 YA given reach.
+           Alice has a Shadow Sliver with added creature types X3 Y2 edited to affect Dragons.
+        In Alice’s third combat phase, a Blinding Angel attacks. If the flag is 0, it deals 1 damage
+        to Bob and triggers its ability to skip Bob’s combat phase, so no jump takes place. If the
+        flag is 1, Meishin, the Mind Cage reduces its power to 0 and it deals no damage, and the
+        jump takes place as before.
+Howe C. Y. and A. Churchill                                                                           18:31
+
+
+B.27        3 4 Z – JumpFwdF Z ′ – Jump forward by Z ′ instructions
+            (=3Z ′ cards) if the flag is 1/true.
+B.28        3 5 Z – JumpBwdF Z ′ – Jump backward by Z ′ instructions
+            (=3Z ′ cards) if the flag is 1/true.
+    Alice has a 2/2 Blinding Angel with added creature types X3 Y4
+          with protection from black
+          .
+    Alice has a 2/2 Blinding Angel with added creature types X3 Y5
+          with protection from black
+          .
+    Alice has a Shadow Sliver with added creature types X3 Y4 edited to affect Dragons.
+Again, in Alice’s third combat phase, a Blinding Angel attacks. This time, if the flag is
+1, it is 1/2 and deals 1 damage to Bob and triggers its ability to skip Bob’s combat phase,
+whereas if the flag is 0, it’s 2/2 and is not made unblockable by Alice’s Tetsuko Umezawa,
+Fugitive, and Meishin, the Mind Cage blocks it (protection from black stops anything
+else from blocking it).
+
+B.29        3 6 0 – CallFwd r0 – Call a function r0 instructions ahead:
+            Jump forward 3 × r0 cards and push P − 3 × r0 onto the return
+            stack. If r0 =0 or 3 × r0 > P , this is undefined behaviour.
+   Bob has a nontoken 3/4 Progenitor Mimic copying an Oubliette with type overridden
+   to artifact creature with added copiable types Starfish X3 Y6 tU, with
+       copiable colour blue
+        but noncopiably coloured green.
+   Bob has a Spellbane Centaur with added creature types X3 Y6 .
+   Bob has a 1/1 Arwen, Weaver of Hope with added creature types X3 Y6 and with
+   P − 1 +1/+1 counters on it.
+   Alice has a Shadow Sliver with added creature types X3 Y6 Z0 edited to affect Dragons.
+   Alice has a Wrathful Red Dragon with added creature types X3 Y6 tU, with
+            flying removed
+            .
+   Alice has a Willbreaker with added creature types X3 Y6 .
+   The initial return stack consists of a blue 3/4 Oubliette with type overridden to artifact
+   creature with added copiable types Starfish X3 Y6 tU, phasing out an animated Celestial
+   Convergence with 1 omen counter on it, both controlled by Alice.
+
+    (Note that unlike the other jump instructions, call instructions use only r0 for the distance,
+and not the value of Z. This is because it is less common for calls to have a short distance.)
+    The return stack is made up of Oubliette creature tokens under Alice’s control. Each
+one phases out the previous one, so that only the top one is phased in.
+    In Bob’s upkeep, Bob gets a token copy of Oubliette, and Arwen, Weaver of Hope
+adds P +1/+1 counters to it. Its ability targets the previous top-of-stack token and phases
+it out; Spellbane Centaur stops it from targeting itself or Bob’s other blue creatures.
+    We continue in the same way as a JumpFwd r0 instruction, which ends with damage
+dealt with lifelink to Empyrial Archangel, with the life gain replaced by Lich and Chains
+of Mephistopheles to advance through the program.
+    This time, that damage also triggers Wrathful Red Dragon, which targets the new
+Oubliette token; the “isn’t a Dragon” targeting criterion stops it from targeting Bob’s other
+blue creatures. Willbreaker triggers, and Alice gains control of the Oubliette token. Then
+the Wrathful Red Dragon trigger resolves, making Empyrial Archangel deal 3 × r0
+damage with wither to the Oubliette token, reducing the number of +1/+1 counters on it to
+
+
+
+                                                                                                     FUN 2024
+18:32   A Programming Language Embedded in Magic: The Gathering
+
+
+        P − 3 × r0 . (Its power is 3 higher than the value pushed onto the return stack, for reasons to
+        be seen later.)
+
+
+        B.30        3 7 Z – Return Z ′ – Return from a function Z ′ instructions long:
+                    Pop a value S from the return stack, and jump forward
+                    max(0, S − 3Z ′ ) cards. If the return stack was empty, end the
+                    game in a draw.
+            Alice has a Razorjaw Oni with added creature types X3 Y7 .
+            Alice has a Spinneret Sliver with added copiable types X3 Y7 edited to affect Starfish
+            at timestamp ⃝.    3
+            Alice has a Syphon Sliver with added copiable types X3 Y7 edited to affect Starfish at
+            timestamp ⃝.   3
+            Bob has a Sosuke, Son of Seshiro with added creature types X3 Y7 edited to affect
+            and trigger on Dragons.
+        You may be wondering why this instruction needs the length of the function. It’s because we
+        only have relative jumps, as there is no program counter; the program is rotated to advance
+        through it. The call instruction used the offset between the call site and the start of the
+        function, but to return, we need the offset between the end of the function and the call site.
+            We begin in the same way as a JumpBwd instruction, with a creature with Z ′ power
+        attacking. Razorjaw Oni stops the Scarecrow token from blocking. Spinneret Sliver gives
+        reach to the top-of-stack token, timestamped later than the Blood Sun (which is currently
+        removing that token’s abilities, as it has conditional types X3 and Y6 ), so the top-of-stack
+        token blocks instead. (This is why it is important that the attacking Fiery Emancipation
+        or Akron Legionnaire is blue rather than green – the top-of-stack token has type tU, so it
+        wouldn’t be able to block otherwise.)
+            In the first combat damage step, the attacking Fiery Emancipation or Akron Legion-
+        naire has 1 extra power from Sosuke, Son of Seshiro, so it deals 3Z ′ + 3 damage with
+                                                                                       ′
+        wither to the top-of-stack token, reducing its power from S + 3 to S − 3Z . Sosuke, Son of
+        Seshiro triggers to destroy it at end of combat.
+            In the second combat damage step, the top-of-stack token deals its power in damage if it
+        is still alive. It is given lifelink by Syphon Sliver, and the life gain is replaced by Lich and
+        Chains of Mephistopheles to advance through the program.
+            If the stack is empty, destroying the base of the stack phases in a Celestial Convergence,
+        which triggers in Alice’s upkeep to end the game in a draw. This is a convenience feature to
+        allow the same code to be used as a function and as a program.
+
+
+        B.31        3 6 1 – CallBwd r0 – Call a function r0 instructions behind:
+                    Jump backward 3 × r0 cards and push 3 × r0 onto the return
+                    stack. If 3 × r0 ≥ P , this is undefined behaviour. May not be
+                    used to call a function from within itself.
+           Alice has a Dormant Sliver with added copiable types X3 Y6 edited to affect Nomads.
+           Bob has a 0/1 blue and black Skanos Dragonheart with added copiable types X3 Y6
+           Nomad Dragon, edited to affect Rhinos, given flying, indestructible and first strike.
+           As with the CallFwd instruction, in Bob’s upkeep, Bob gets a token copy of Oubliette,
+        whose ability targets the previous top-of-stack token and phases it out.
+Howe C. Y. and A. Churchill                                                                         18:33
+
+
+   Dormant Sliver stops the Fiery Emancipation from attacking, and Skanos Dragon-
+heart attacks instead. It is given similar characteristics, and its ability triggers, adding the
+value of r0 to its power.
+   We proceed in the same way as a JumpBwd instruction (B.24), up to the Justice dealing
+P − 3Z ′ damage with lifelink to the Empyrial Archangel. Then, in the same way as the
+CallFwd instruction (B.29), Wrathful Red Dragon triggers from that damage, and the
+same sequence of events follows, to give Alice control of the new top-of-stack token and
+adjust its power.
+   (Skanos Dragonheart doesn’t interfere with the CallFwd instruction because Akron
+Legionnaire also stops it from attacking when Z = 0.)
+
+B.32        3 6 2 – CallBwdR r0 – Call a function r0 instructions behind
+            (direct-recursion-capable): Same as CallBwd, but may be used
+            to call a function from within itself.
+   Bob has a Corpsejack Menace with added creature types X3 Y7 Z2 .
+
+    This variant instruction is necessary when a function calls itself directly: if the regular
+CallBwd instruction is used to do that, the value pushed onto the return stack is the distance
+between the start of the function and the call site, and on returning, subtracting the length
+of the function yields a negative value, which results in no jump, which is incorrect.
+    Corpsejack Menace doubles the number of +1/+1 counters on the new Oubliette
+token to 2P , and the rest is as before.
+
+B.33        11 Y Z (Y̸=Z) – FLess rZ rY – Set the flag to 1 if rZ <rY , 0
+            otherwise. Flag-combining.
+   Alice has a Necrogen Mists given type X11 .
+   Bob has a 1/1 Halfdane with added creature types X11 $tr_Y$ , given flying and
+           .a +1/+0 counter
+   Bob has a 1/1 Okk with added creature types X11 Elf, given flying and “Whenever this
+   creature deals combat damage to a player, draw a card.”
+   Bob has a 1/1 Bishop of Binding given type X11 , edited to affect Fractals.
+   Alice has a Tamiyo, Collector of Tales, with type overridden to artifact
+          .creature Fractal
+   Bob has a Willbreaker with added creature types X11 , and with land type Mountain
+   added at timestamp ⃝4 by an edited Sealock Monster.
+   Alice has a Shimmer choosing Mountain with types X2 Y2 .
+   Alice has a Shimmer choosing Mountain with types X2 Y3 .
+   Alice has a Shimmer choosing Mountain with type X3 .
+
+    In Bob’s upkeep, Necrogen Mists makes Bob discard the flag card if it’s in hand,
+and Halfdane triggers and targets rY , taking its power and toughness as base power and
+toughness; its power is now Y + 1.
+    In Bob’s combat step, Halfdane attacks; Okk has Z + 1 power, so can attack only if
+Y > Z. If so, it deals its damage to Alice and triggers the added ability to draw a card,
+which sets the flag to 1.
+    To accomplish the flag-combining property (using logical OR to combine successive
+flag-setting instructions), Bishop of Binding also attacks; its power is 1, never high enough
+for it to let Okk attack. Its ability targets Tamiyo, Collector of Tales (which has been
+
+
+
+                                                                                                   FUN 2024
+18:34   A Programming Language Embedded in Magic: The Gathering
+
+
+        made a creature and not a planeswalker), triggering Willbreaker to make Bob gain control
+        of Tamiyo, Collector of Tales. While under Bob’s control, it stops Bob from being made
+        to discard the flag card by abilities Alice controls, so the flag remains 1 if it is 1.
+            This Willbreaker has Mountain added to its types (which only works while Life and
+        Limb makes it a land). For instructions that end the flag-combining state (those starting
+        with 2 2, 2 3, or 3), Shimmer makes it phase out in Bob’s untap step if it wasn’t already
+        phased out, which ends the duration of Willbreaker’s effect and returns control of Tamiyo,
+        Collector of Tales to Alice.
+
+
+        B.34       11 Z Z – FIsZero rZ – Set the flag to 1 if rZ =0, 0 otherwise.
+                   Flag-combining.
+           Bob has a Riders of Gavony with type set to X11 and edited to give Rabbit creatures
+           protection from Yetis at timestamp ⃝.
+                                              1
+
+           This is a special case of the previous instruction. Just as with Sub1Cond (B.5), Riders
+        of Gavony gives protection from Yetis to all the registers, but only rZ gets to keep it. If
+        Y = Z, this leaves the Halfdane in B.33 with no legal targets for its ability, and its base
+        power remains 1, making 1 the value to be compared with.
+
+
+         Appendix C           Card Modification Techniques
+        Here we detail the techniques used while setting up the microcontroller to accomplish
+        the various modifications to cards described in Section 4 and in the instructions (whose
+        implementation is omitted from this paper for space reasons, but can be seen at [10]). We
+        assume Alice has generated an arbitrarily large amount of mana and drawn all the cards she
+        needs using Dimir Guildmage. We are able to repeatedly cast the instants and sorceries
+        used below by repeatedly casting Archaeomancer and bouncing it with Capsize.
+
+           Editing creature types: Artificial Evolution
+           Editing colour words: Mind Bend
+           Copiably setting creature type and/or colour and making creatures 1/1: Croaking
+           Counterpart combined with Artificial Evolution and Spectral Shift
+           Adding copiable creature types: Glasspool Mimic in conjunction with Artificial
+           Evolution
+           Non-copiably setting creature type: Use Blade of Shared Souls to temporarily make
+           the creature a copy of Proteus Machine. Use Backslide to turn it face down, then
+           turn it face up and set its creature type.
+           Adding non-copiable creature types: Olivia Voldaren, modified by Artificial Evolution
+           to change Vampire to another type.
+           Copiably setting power and toughness, for positive toughness: Saw in Half after adjusting
+           as necessary with Belbe’s Armor, Enrage, and/or Drana, Kalastria Bloodchief .
+           Copiably setting power and toughness to 0/0 and adding type artifact: Have an Engin-
+           eered Plague on Shapeshifter creatures. Cast Hulking Metamorph prototyped, and
+           decline to copy anything; it’s now 2/2. Cast Saw in Half on it, producing token copies
+           that are base 1/1, net 0/0, and then they can copy other creatures while setting base
+           P/T to 0/0. Grumgully, the Generous adds a +1/+1 counter to keep it alive.
+           Non-copiably setting power and toughness to the same number: Gigantoplasm
+Howe C. Y. and A. Churchill                                                                         18:35
+
+
+   Copiably setting mana value to 0: Vizier of Many Faces copiably removes the mana
+   cost, making the mana value 0. (This is usually done so that Bludgeon Brawl does
+   not make this give a power boost.) We can repeat this if necessary using Lithoform
+   Engine to copy the Embalm ability, untapped by Twiddle.
+   Copiably setting card type to (only) artifact: Imposter Mech, after targeting the
+   original with Donate.
+   Adding type artifact: Memnarch
+   Copiably adding type creature: Urza, Prince of Kroog, in conjunction with Memnarch
+   if necessary, and with the creature type edited by Artificial Evolution.
+   Copiably adding flying: Irenicus’s Vile Duplication copiably adds flying.
+   Adding keyword ability counters – flying, indestructible, reach, first strike, double strike,
+   lifelink, deathtouch, vigilance, trample: Kathril, Aspect Warper, having used Dimir
+   Guildmage to discard other cards used in the construction: Healer’s Flock; Darksteel
+   Myr; Halana and Alena, Partners; Sylvia Brightspear; Questing Beast; and
+   Quartzwood Crasher. Regrowth gets back the discarded cards afterwards.
+   Adding protection from a colour: Have a Council Guardian enter the battlefield,
+   and use Ballot Broker to make sure the right colour wins the vote. Then use True
+   Polymorph to turn it into what it should be.
+   Adding islandwalk: Fishliver Oil, copied with Mythos of Illuna
+   Adding “Whenever this creature deals combat damage to a player, draw a card.”: Use
+   Blade of Shared Souls to temporarily make the creature a copy of an Ascendant
+   Spirit, which itself is copiably an Angel by Glasspool Mimic+Artificial Evolution,
+   and then activate its last ability to add this ability. Generate the snow mana with a
+   Snow-Covered land repeatedly untapped by Twiddle.
+   Removing flying: Use Blade of Shared Souls to temporarily make the creature a copy
+   of Mist Dragon, and use its ability to remove flying.
+   Adding +1/+1 counters: Kathril, Aspect Warper and Resourceful Defense
+   Adding −1/−0 counters: Jabari’s Influence to get the first one, and multiple copies of
+   Resourceful Defense to get more.
+   Adding +1/+0 counters: Dwarven Armorer produces +1/+0 counters. Multiple copies
+   of Resourceful Defense multiply the counters and then move them, as necessary.
+   Creating arbitrary tokens: Rotlung Reanimator with Artificial Evolution creates
+   tokens of arbitrary types, and Saw in Half sets their sizes after adjusting with Belbe’s
+   Armor.
+   Setting colours: Prismatic Lace
+   Giving Bob control of cards: Donate
+
+    Example: We make each Vaevictis Asmadi, the Dire into a 1/1 Sliver Beast Reflection
+by casting Croaking Counterpart targeting a real Vaevictis Asmadi, the Dire, then
+responding by casting Artificial Evolution targeting Croaking Counterpart to change
+Frog to Sliver. Once the 1/1 Sliver is present, we return Artificial Evolution to our hand
+using Archaeomancer. We cast Glasspool Mimic; edit it with Artificial Evolution
+replacing Shapeshifter with Beast; cast Capsize with buyback on the Archaeomancer;
+recast Archaeomancer using Leyline of Anticipation to get back Artificial Evolution
+again; then use Artificial Evolution one more time to replace Rogue with Reflection. Then
+Glasspool Mimic resolves and becomes a 1/1 Sliver Beast Reflection copy of Vaevictis
+Asmadi, the Dire. We can create further token copies of this with Mythos of Illuna
+(all the creature type additions are copiable), and then use Capsize to return the original
+Glasspool Mimic to our hand for the next time we need to use it.
+
+
+
+                                                                                                   FUN 2024
+18:36   A Programming Language Embedded in Magic: The Gathering
+
+
+         Appendix D            Decklist
+        Table 5 on the facing page contains a decklist suitable for bringing to a Legacy tournament
+        which could set up the microcontroller. Adjust the number of basic lands according to
+        the program you wish to write; the following decklist contains enough to write the Collatz
+        sample program. You can also leave out cards that are only used in instructions that aren’t
+        present in the program you wish to write. E.g. Oubliette is only used in Call and Return
+        instructions.
+Howe C. Y. and A. Churchill                                                                                          18:37
+
+
+
+   Table 5 Decklist to play the Magic Microcontroller in a Legacy tournament
+
+  Card                         Purpose                       Card                           Purpose
+ 4 Ancient Tomb                Bootstrap                    4 Lotus Petal                   Bootstrap
+ 4 Grim Monolith               Infinite mana                4 Power Artifact                Infinite mana
+ 4 Gemstone Array              Infinite mana                4 Dimir Guildmage               Draw rest of deck
+ 13 Plains                     Program                      13 Snow-Covered Plains          Program
+ 13 Island                     Program                      18 Snow-Covered Island          Program
+ 13 Swamp                      Program                      13 Snow-Covered Swamp           Program
+ 18 Mountain                   Program                      8 Snow-Covered Mountain         Program
+ 18 Forest                     Program                      10 Snow-Covered Forest          Program
+ 13 Wastes                     Program                      10 Snow-Covered Wastes          Program
+ 1 Memnarch                    Make token copies            1 Mythos of Illuna              Make token copies
+ 1 Capsize                     Set up                       1 Archaeomancer                 Set up
+ 1 Artificial Evolution        Edit cards                   1 Mind Bend                     Edit cards
+ 1 Prismatic Lace              Edit cards                   1 Spectral Shift                Edit cards
+ 1 Glasspool Mimic             Add types                    1 Olivia Voldaren               Add types
+ 1 Proteus Machine             Set creature types           1 Backslide                     Set creature types
+ 1 Argent Mutation             Set up                       1 Leyline of Anticipation       Set up
+ 1 Gigantoplasm                Edit power/toughness         1 Croaking Counterpart          Set up
+ 1 Saw in Half                 Edit power/toughness         1 Belbe’s Armor                 Edit power/toughness
+ 1 Enrage                      Edit power/toughness         1 Drana, Kalastria Bloodchief   Edit power/toughness
+ 1 Engineered Plague           Edit power/toughness         1 Grumgully, the Generous       Edit power/toughness
+ 1 Hulking Metamorph           Edit power/toughness         1 Vizier of Many Faces          Edit mana value
+ 1 Lithoform Engine            Edit mana value              1 Twiddle                       Edit mana value
+ 1 Imposter Mech               Edit types                   1 Donate                        Edit control
+ 1 Astral Dragon               Add types and abilities      1 Irenicus’s Vile Duplication   Add abilities
+ 1 Urza, Prince of Kroog       Add types                    1 Kathril, Aspect Warper        Add abilities
+ 1 Council Guardian            Add abilities                1 Ballot Broker                 Add abilities
+ 1 True Polymorph              Add abilities                1 Fishliver Oil                 Add abilities
+ 1 Blade of Shared Souls       Change types and abilities   1 Ascendant Spirit              Add abilities
+ 1 Mist Dragon                 Remove abilities             1 Resourceful Defense           Add counters
+ 1 Jabari’s Influence          Add counters                 1 Fishliver Oil                 Add abilities
+ 1 Dwarven Armorer             Add counters                 1 Sealock Monster               Add types
+ 1 True Polymorph              Add abilities                1 Grand Melee                   Control combat
+ 1 Stormtide Leviathan         Control combat               1 Tetsuko Umezawa, Fugitive     Control combat
+ 1 Worship                     Control combat               1 Vaevictis Asmadi, the Dire    Advance program
+ 1 Wheel of Sun and Moon       Advance program              1 Tajuru Preserver              Advance program
+ 1 Dralnu’s Crusade            Conditional mechanism        1 Life and Limb                 Conditional mechanism
+ 1 Blood Sun                   Conditional mechanism        1 Strata Scythe                 Conditional mechanism
+ 1 Healer’s Flock              Keyword abilities            1 Dream Fighter                 Conditional mechanism
+ 1 Shadow Sliver               Conditional mechanism        1 Bludgeon Brawl                Conditional mechanism
+ 1 Bloodthirster               Advance program              1 Masked Gorgon                 Constrain targets
+ 1 Spectral Guardian           Constrain targets            1 Sterling Grove                Constrain targets
+ 1 Ivory Mask                  Constrain targets            1 Illusionary Terrain           Control types
+ 1 Joraga Warcaller            Registers                    1 Riders of Gavony              Registers
+ 1 Nevermore                   Control choices              1 Aggressive Mining             Control choices
+ 1 Root Maze                   Control choices              1 Tomorrow, Azami’s Familiar    Flag
+ 1 Choke                       Control choices              1 Suppression Bonds             Control choices
+ 1 Stony Silence               Control choices              1 Cursed Totem                  Control choices
+ 1 Recycle                     Control state                1 Mirror Gallery                Control state
+ 1 Corrosive Mentor            Add abilities                1 Halana and Alena, Partners    Instructions
+ 1 Archpriest of Iona          Instructions                 1 Shape Stealer                 Instructions
+ 1 Necrogen Mists              Instructions                 1 Halfdane                      Instructions
+ 1 Tanuki Transplanter         Instructions                 1 Furtive Homunculus            Instructions
+ 1 Omnath, Locus of Mana       Instructions                 1 Wrathful Red Dragon           Instructions
+ 1 Belligerent Brontodon       Instructions                 1 Smog Elemental                Instructions
+ 1 Hornet Nest                 Instructions                 1 Phantom Steed                 Instructions
+ 1 War Elemental               Instructions                 1 Tocatli Honor Guard           Instructions
+ 1 Ward Sliver                 Instructions                 1 Godhead of Awe                Instructions
+ 1 Wandering Wolf              Instructions                 1 Behind the Scenes             Instructions
+ 1 Spinneret Sliver            Instructions                 1 Quartzwood Crasher            Instructions
+ 1 Arwen, Weaver of Hope       Instructions                 1 Aether Flash                  Instructions
+ 1 Charisma                    Instructions                 1 Skeleton Key                  Instructions
+ 1 Serpent of Yawning Depths   Instructions                 1 Field Marshal                 Instructions
+ 1 Questing Beast              Instructions                 1 Vigor                         Instructions
+ 1 Toralf, God of Fury         Instructions                 1 Gideon’s Intervention         Instructions
+ 1 Progenitor Mimic            Instructions                 1 Volcano Hellion               Instructions
+ 1 Artificer Class             Instructions                 1 Syr Elenora, the Discerning   Instructions
+ 1 Slithering Shade            Instructions                 1 Suntail Hawk                  Instructions
+ 1 Strength-Testing Hammer     Instructions                 1 Ancient Gold Dragon           Instructions
+ 1 Rat Colony                  Instructions                 1 Goblin Pyromancer             Instructions
+ 1 Celestial Convergence       Instructions                 1 Alert Heedbonder              Instructions
+ 1 Spiritual Sanctuary         Instructions                 1 Abyssal Specter               Instructions
+ 1 Catacomb Dragon             Instructions                 1 Taii Wakeen, Perfect Shot     Instructions
+ 1 Excruciator                 Instructions                 1 Aegar, the Freezing Flame     Instructions
+ 1 Khorvath Brightflame        Instructions                 1 Sylvia Brightspear            Instructions
+ 1 Mangara’s Equity            Instructions                 1 Darksteel Myr                 Instructions
+ 1 Ojutai, Soul of Winter      Instructions                 1 Angrath’s Marauders           Instructions
+ 1 Kangee, Aerie Keeper        Instructions                 1 Shimmer                       Instructions
+ 1 Fiery Emancipation          Instructions                 1 Chains of Mephistopheles      Instructions
+ 1 Captain’s Claws             Instructions                 1 Steely Resolve                Instructions
+ 1 Reaper King                 Instructions                 1 Akron Legionnaire             Instructions
+ 1 Discordant Spirit           Instructions                 1 Blinding Angel                Instructions
+ 1 Meishin, the Mind Cage      Instructions                 1 Bower Passage                 Instructions
+ 1 Darksteel Myr               Instructions                 1 Moonsilver Spear              Instructions
+ 1 Spellbane Centaur           Instructions                 1 Melira’s Keepers              Instructions
+ 1 Spiteful Shadows            Instructions                 1 Empyrial Archangel            Instructions
+ 1 Lich                        Instructions                 1 Justice                       Instructions
+ 1 Rotlung Reanimator          Instructions                 1 Oubliette                     Instructions
+ 1 Willbreaker                 Instructions                 1 Razorjaw Oni                  Instructions
+ 1 Sosuke, Son of Seshiro      Instructions                 1 Syphon Sliver                 Instructions
+ 1 Dormant Sliver              Instructions                 1 Skanos Dragonheart            Instructions
+ 1 Corpsejack Menace           Instructions                 1 Okk                           Instructions
+ 1 Bishop of Binding           Instructions                 1 Tamiyo, Collector of Tales    Instructions
+ 1 Shimmer                     Instructions                 1 Sporemound                    Instructions
+ 1 Polyraptor                  Instructions                 1 Chief of the Scale            Instructions
+ 1 Gruul Ragebeast             Instructions                 1 Sliver Hivelord               Instructions
+
+
+
+
+                                                                                                                    FUN 2024
+

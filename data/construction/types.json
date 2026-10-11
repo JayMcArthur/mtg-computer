@@ -1,0 +1,26 @@
+{
+  "profile": "microcontroller-2024-current-types-v1",
+  "source": "https://www.toothycat.net/~hologram/Magic/Magic_Microcontroller_full.pdf",
+  "rules_version": "2026-09-25",
+  "X": ["Aetherborn", "Beeble", "Capybara", "Drake", "Eldrazi", "Faerie", "Gremlin", "Homarid", "Illusion", "Juggernaut", "Kavu", "Lhurgoyf"],
+  "XA": "Monkey",
+  "Y": ["Antelope", "Basilisk", "Camel", "Dauthi", "Efreet", "Fox", "Gnome", "Hippo", "Inkling", "Jellyfish", "Kor", "Lammasu"],
+  "YA": "Metathran",
+  "Z": ["Aurochs", "Brushwagg", "Camarid", "Druid", "Elephant", "Ferret", "Graveborn", "Hamster", "Imp", "Jackal", "Kithkin", "Licid"],
+  "ZA": "Masticore",
+  "port": {
+    "historical": "Cephalid",
+    "current": "Capybara",
+    "reason": "Cephalid is absent from current rule 205.3m. Capybara is a current creature type unused by the 2024 recipe. Octopus was considered but is used by the Output gadget. Apply this substitution to every X2 edit and copiable value."
+  },
+  "roles": {
+    "universal_blocking": "Sliver",
+    "inactive": "Saproling",
+    "red_protection": "Reflection",
+    "blue_protection": "Beast",
+    "destination_targeting": "Yeti",
+    "source_targeting": "Zubera",
+    "register": "Rabbit",
+    "scratch_register": "Rhino"
+  }
+}

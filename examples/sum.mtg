@@ -1,0 +1,10 @@
+# Compute 10 + 9 + ... + 1. Labels compile to card-program jumps.
+count = 10
+total = 0
+loop:
+if count == 0 goto done
+total += count
+count -= 1
+goto loop
+done:
+halt

@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MTG computer · recorded execution</title>
+<style>
+:root { color-scheme:dark; font:15px/1.5 system-ui,sans-serif; background:#10151f; color:#e4eaf2; }
+* { box-sizing:border-box; }
+body { margin:0; }
+header { padding:20px 28px; background:#182231; border-bottom:1px solid #344358; }
+h1 { font-size:25px; margin:0 0 5px; font-weight:650; }
+h2 { font-size:14px; letter-spacing:.07em; text-transform:uppercase; color:#a8bbd2; margin:0 0 14px; }
+p { margin:6px 0; }
+button,select,input { font:inherit; }
+button,select { background:#25344a; border:1px solid #526982; color:inherit; border-radius:7px; padding:6px 11px; cursor:pointer; }
+button:hover { background:#334d69; }
+button:focus-visible,select:focus-visible,input:focus-visible { outline:3px solid #78d9bd; }
+button:disabled { opacity:.4; cursor:default; }
+.controls { display:flex; gap:9px; align-items:center; flex-wrap:wrap; padding:15px 28px; background:#141d2b; position:sticky; top:0; z-index:2; }
+#position { flex:1; min-width:180px; accent-color:#7cddbd; }
+#boundary { min-width:240px; font-variant-numeric:tabular-nums; }
+main { padding:20px 28px; display:grid; grid-template-columns:minmax(260px,1fr) minmax(420px,2fr) minmax(300px,1.1fr); gap:16px; }
+section { border:1px solid #344358; background:#18202c; border-radius:10px; padding:18px; min-width:0; }
+.wide { grid-column:1/3; }
+.side { grid-column:3; grid-row:1/3; }
+.muted { color:#a1b3c7; font-size:13px; }
+.evidence { display:inline-block; background:#283d38; color:#a8ebd6; border-radius:4px; padding:3px 8px; font-size:13px; }
+#result { margin-left:10px; color:#ffd390; }
+pre { white-space:pre-wrap; overflow-wrap:anywhere; font:13px/1.65 ui-monospace,monospace; }
+.source-line { display:block; width:100%; padding:3px 6px; text-align:left; border:0; border-radius:3px; background:transparent; font:13px/1.65 ui-monospace,monospace; }
+.active { background:#2a4b4a !important; border-color:#7cddbd !important; }
+.instruction { display:block; text-align:left; width:100%; margin-bottom:8px; }
+.ribbon { display:flex; gap:7px; overflow:auto; padding:8px 0; }
+.land { min-width:98px; background:#253246; padding:10px; border:1px solid #526982; border-radius:7px; font-size:12px; }
+.land.current { border:2px solid #7cddbd; }
+.registers { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin:15px 0; }
+.register { text-align:left; font:13px ui-monospace,monospace; }
+.register strong { display:block; font-size:20px; margin-top:7px; color:#a8ebd6; }
+.battlefield { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(145px,1fr)); gap:8px; }
+.card { text-align:left; font-size:12px; padding:11px; min-height:100px; background:#202c3e; border:1px solid #4b617c; border-radius:8px; }
+.card strong { display:block; font-size:13px; margin-bottom:4px; }
+.card .badge { display:block; color:#a8ebd6; }
+.phased { opacity:.5; border-style:dashed; }
+.tapped { border-left:5px solid #d8a65d; }
+details { margin-top:12px; }
+summary { cursor:pointer; color:#a8bbd2; }
+.timeline { max-height:380px; overflow:auto; }
+.event { text-align:left; display:block; width:100%; margin:5px 0; font-size:12px; }
+.stack { border-left:3px solid #e2b068; padding-left:10px; font-size:13px; }
+#detail { max-height:700px; overflow:auto; }
+#cause { margin:12px 0; }
+@media(max-width:1100px) { main { grid-template-columns:1fr 1.7fr; } .side { grid-column:1/3; grid-row:auto; } }
+@media(max-width:700px) { main { display:block; padding:12px; } section { margin-bottom:12px; } .battlefield { grid-template-columns:1fr; } .controls,header { padding:12px; } }
+</style>
+<header>
+  <h1>A program running through Magic</h1>
+  <span class="evidence">Recorded Forge game · prepared board</span><span id="result"></span>
+  <p class="muted">The values below come from saved engine checkpoints. Setup reachability and forced-choice proof are separate from this replay.</p>
+</header>
+<div class="controls">
+  <button id="back" aria-label="Previous checkpoint">←</button>
+  <button id="play">Play</button>
+  <button id="next" aria-label="Next checkpoint">→</button>
+  <select id="step" aria-label="Step size"><option value="checkpoint">Checkpoint</option><option value="phase">Turn / phase</option><option value="instruction">Instruction</option></select>
+  <select id="speed" aria-label="Playback speed"><option value="1000">1×</option><option value="250">4×</option><option value="2000">½×</option></select>
+  <input id="position" type="range" min="0" value="0" aria-label="Replay position">
+  <span id="boundary"></span>
+</div>
+<main>
+  <section><h2>Readable source</h2><div id="source"></div><h2 style="margin-top:20px">Program instructions</h2><div id="instructions"></div><p class="muted">Input declarations establish counters during preparation. Assignments compile to the NumBuild and Set gadgets.</p></section>
+  <section><h2>Decoded registers</h2><div id="registers" class="registers"></div><h2>Cyclic program library</h2><p id="latches"></p><div id="library" class="ribbon"></div><h2 style="margin-top:18px">Stack</h2><div id="stack"></div></section>
+  <section class="wide"><h2>Battlefield</h2><label>Show group <select id="group"><option value="focus">Reader and current instruction</option><option value="reader">All reader cards</option><option value="registers">Registers and target protection</option><option value="arithmetic">Add and Halt gadgets</option><option value="constants">NumBuild and Set gadgets</option><option value="environment">Environment</option><option value="all">Full battlefield</option></select></label><div id="board" class="battlefield" style="margin-top:15px"></div></section>
+  <section class="side"><h2>Rules events</h2><div id="events" class="timeline"></div><div id="cause"></div><h2 style="margin-top:24px">Inspect a permanent or event</h2><div id="detail"><p class="muted">Select a card, counter value or rules event.</p></div><details><summary>Run provenance</summary><pre id="provenance"></pre></details></section>
+</main>
+<script type="application/json" id="trace-data">__TRACE_DATA__</script>
+<script>
+'use strict';
+const data = JSON.parse(document.getElementById('trace-data').textContent);
+const rows = data.rows;
+const manifest = rows[0].manifest;
+const checkpoints = rows.filter(row => row.kind === 'checkpoint');
+const specs = new Map(manifest.cards.map(card => [card.id, card]));
+const programIds = new Set(manifest.cards.filter(card => card.group==='program').map(card=>card.id));
+const byId = new Map(rows.map(row => [row.id, row]));
+let position = 0;
+let selection = null;
+let timer = null;
+const el = id => document.getElementById(id);
+const make = (tag, text, className) => {
+  const node = document.createElement(tag);
+  if (text !== undefined) node.textContent = text;
+  if (className) node.className = className;
+  return node;
+};
+function button(text, action, className) {
+  const node = make('button', text, className);
+  node.addEventListener('click', action);
+  return node;
+}
+function instructionAt(frame) {
+  const entered = rows.filter(row => row.id <= frame.id && row.kind === 'GameEventCardChangeZone' && row.to === 'Battlefield' && programIds.has(row.card));
+  if (!entered.length) return 0;
+  return Math.floor(Number(entered.at(-1).card.slice(8)) / 3);
+}
+function inspectCard(id) {
+  selection = id;
+  const card = checkpoints[position].cards.find(card => card.id === id);
+  const spec = specs.get(id);
+  const panel = el('detail');
+  el('cause').replaceChildren();
+  panel.replaceChildren(make('strong', `${id} · ${card?.name || spec?.name || id}`));
+  if (spec) {
+    const text = make('p', spec.copiable.blank_rules ? 'No abilities.' : data.texts[spec.name].replaceAll('\\n', '\n'));
+    text.style.whiteSpace = 'pre-line';
+    panel.append(make('p', spec.copiable.blank_rules ? 'Prepared token' : 'Printed text · frozen Forge card script', 'muted'), text);
+    panel.append(make('p', 'Prepared copiable values and lasting changes', 'muted'), make('pre', JSON.stringify({copiable:spec.copiable, modifications:spec.modifications, attached_to:spec.attached_to, imprint:spec.imprint, chosen_types:spec.chosen_types, chosen_colors:spec.chosen_colors}, null, 2)));
+  }
+  if (card) {
+    if (card.power_breakdown) {
+      const stat = (label, parts, total) => `${label}: current value ${parts.current} + effect boosts ${parts.boost} + counters ${parts.counters} = ${total}`;
+      panel.append(make('p', 'Power and toughness contributions · recorded by Forge', 'muted'),
+        make('p', stat('Power', card.power_breakdown, card.power)),
+        make('p', stat('Toughness', card.toughness_breakdown, card.toughness)));
+    }
+    panel.append(make('p', 'Effective engine values at this checkpoint', 'muted'), make('pre', JSON.stringify(card, null, 2)));
+  }
+}
+function inspectEvent(event) {
+  selection = null;
+  const panel = el('detail');
+  panel.replaceChildren(make('strong', `Event ${event.id} · ${event.kind}`), make('pre', JSON.stringify(event, null, 2)));
+  el('cause').replaceChildren();
+  if (event.parent !== undefined && event.parent !== null) {
+    const parent = byId.get(event.parent);
+    el('cause').append(button(`Cause: event ${parent.id} · ${parent.card}`, () => inspectEvent(parent)));
+  }
+  if (event.card) panel.append(button(`Inspect ${event.card}`, () => inspectCard(event.card)));
+  if (event.source) panel.append(button(`Inspect source ${event.source}`, () => inspectCard(event.source)));
+}
+function showCard(card) {
+  const node = button('', () => inspectCard(card.id), `card${card.phased_out?' phased':''}${card.tapped?' tapped':''}${selection===card.id?' active':''}`);
+  node.append(make('strong', card.id), make('span', card.name), make('span', card.type, 'badge'));
+  if (card.type.includes('Creature')) node.append(make('span', `${card.power} / ${card.toughness}`, 'badge'));
+  if (card.phased_out) node.append(make('span', 'Phased out', 'badge'));
+  return node;
+}
+function renderBoard(frame, current) {
+  const board = el('board');
+  board.replaceChildren();
+  const group = el('group').value;
+  for (const player of ['Alice', 'Bob']) {
+    const side = make('div');
+    const all = frame.cards.filter(card => card.zone === 'Battlefield' && card.controller === player);
+    const visible = all.filter(card => {
+      if (group === 'all') return true;
+      if (group !== 'focus') return specs.get(card.id)?.group === group;
+      return ['fighter-X','fighter-Y','fighter-Z','wildcard-X','wildcard-Y','wildcard-Z','vaevictis-X','vaevictis-Y','vaevictis-Z','bloodthirster','r1','r2',manifest.instructions[current][0]===0?'add':'halt'].includes(card.id)
+        || (card.id.startsWith('gate-') && card.phased_out)
+        || ([5,10].includes(manifest.instructions[current][0]) && (specs.get(card.id)?.group==='constants' || card.id==='r0'));
+    });
+    side.append(make('h2', `${player} · ${visible.length} of ${all.length} permanents`));
+    const cards = make('div', undefined, 'cards');
+    visible.forEach(card => cards.append(showCard(card)));
+    side.append(cards);
+    board.append(side);
+  }
+}
+function render() {
+  const frame = checkpoints[position];
+  const current = instructionAt(frame);
+  const end = position + 1 < checkpoints.length ? checkpoints[position+1].id : rows.at(-1).id + 1;
+  el('position').value = position;
+  el('boundary').textContent = `${frame.turn===0?'Prepared board':`Turn ${frame.turn} · ${frame.phase}`} · ${position+1}/${checkpoints.length}`;
+  el('back').disabled = position === 0;
+  el('next').disabled = position === checkpoints.length-1;
+  el('source').replaceChildren();
+  manifest.source.forEach((line, index) => {
+    const active = manifest.source_lines[current] === index+1;
+    el('source').append(button(`${index+1}  ${line}`, () => jumpInstruction(manifest.source_lines.indexOf(index+1)), `source-line${active?' active':''}`));
+  });
+  el('instructions').replaceChildren();
+  manifest.instructions.forEach((symbols, pc) => {
+    const [x,y,z] = symbols;
+    const name = x===0 ? `Add r${y} r${z}` : x===4 ? 'HaltD' : x===5 ? (y===z ? `Zero r${y}` : `Set r${y} r${z}`) : x===10 ? `NumBuild ${12*y+z}` : `Opcode ${x} ${y} ${z}`;
+    el('instructions').append(button(`${pc}: ${name}\n${symbols.join(' · ')} · source line ${manifest.source_lines[pc]}\n${symbols.map(n=>data.symbols[n]).join(' / ')}`, () => jumpInstruction(pc), `instruction${pc===current?' active':''}`));
+  });
+  el('registers').replaceChildren();
+  for (let r=0; r<12; r++) {
+    const card = frame.cards.find(card => card.id === `r${r}`);
+    const names = Object.entries(manifest.variables).filter(([,number]) => number===r).map(([name]) => name);
+    const node = button(`r${r} ${names.join(', ')}`, () => inspectCard(`r${r}`), 'register');
+    node.append(make('strong', String(card.counters.P1P1 || 0)));
+    el('registers').append(node);
+  }
+  const gates = frame.cards.filter(card => card.id.startsWith('gate-') && card.phased_out).map(card => card.id.replace('gate-', ''));
+  el('latches').textContent = `Selected gates phased out: ${gates.join(' · ') || 'none'}`;
+  el('library').replaceChildren();
+  frame.cards.filter(card => programIds.has(card.id) && card.zone==='Battlefield').forEach(card => el('library').append(button(`${card.name}\n${card.id} · battlefield`, () => inspectCard(card.id), 'land current')));
+  frame.cards.filter(card => programIds.has(card.id) && card.zone==='Library').forEach(card => el('library').append(button(`${card.name}\n${card.id}`, () => inspectCard(card.id), 'land')));
+  el('stack').replaceChildren();
+  const resolved = new Set(rows.filter(row => row.id<=frame.id && row.kind==='GameEventSpellResolved').map(row => row.ability));
+  const stack = rows.filter(row => row.id<=frame.id && row.kind==='GameEventSpellAbilityCast' && !resolved.has(row.ability));
+  if (!stack.length) el('stack').append(make('p', 'Empty', 'muted'));
+  stack.toReversed().forEach(event => el('stack').append(button(`${event.card}: ${event.description}`, () => inspectEvent(event), 'stack')));
+  el('events').replaceChildren();
+  rows.filter(row => row.id>frame.id && row.id<end && !['checkpoint','header'].includes(row.kind)).forEach(event => {
+    const text = event.kind==='decision'
+      ? `${event.player} · ${event.decision}: ${event.options.join(', ') || 'no alternatives'} · ${event.reason}`
+      : `${event.card || ''} ${event.description || event.kind}`;
+    el('events').append(button(`${event.id} · ${text}`, () => inspectEvent(event), 'event'));
+  });
+  if (!el('events').childElementCount) el('events').append(make('p', 'No recorded rules events before the next checkpoint.', 'muted'));
+  renderBoard(frame, current);
+  if (selection) inspectCard(selection);
+}
+function jumpInstruction(pc) {
+  if (pc < 0) return;
+  const next = checkpoints.findIndex(frame => instructionAt(frame)===pc);
+  if (next >= 0) { position = next; render(); }
+}
+function advance(direction) {
+  const mode = el('step').value;
+  const current = checkpoints[position];
+  let next = position + direction;
+  while (next >= 0 && next < checkpoints.length) {
+    const candidate = checkpoints[next];
+    if (mode === 'checkpoint' || (mode === 'phase' && (candidate.phase!==current.phase || candidate.turn!==current.turn)) || (mode === 'instruction' && instructionAt(candidate)!==instructionAt(current))) break;
+    next += direction;
+  }
+  position = Math.max(0, Math.min(checkpoints.length-1, next));
+  render();
+  if (position === checkpoints.length-1) pause();
+}
+function pause() { clearInterval(timer); timer = null; el('play').textContent = 'Play'; }
+function play() { timer = setInterval(() => advance(1), Number(el('speed').value)); el('play').textContent = 'Pause'; }
+el('back').addEventListener('click', () => advance(-1));
+el('next').addEventListener('click', () => advance(1));
+el('play').addEventListener('click', () => timer ? pause() : play());
+el('position').max = checkpoints.length-1;
+el('position').addEventListener('input', event => { pause(); position=Number(event.target.value); render(); });
+el('speed').addEventListener('change', () => { if (timer) { pause(); play(); } });
+el('group').addEventListener('change', render);
+const result = rows.findLast(row => row.kind==='result');
+el('result').textContent = result ? `${result.status}${result.draw?' · draw':''}${result.detail?' · '+result.detail:''}` : 'Recording incomplete';
+el('provenance').textContent = JSON.stringify({engine_revision:manifest.engine_revision, rules_sha256:manifest.rules_sha256, manifest_sha256:rows[0].manifest_sha256, profile:manifest.profile}, null, 2);
+render();
+</script>
+</html>

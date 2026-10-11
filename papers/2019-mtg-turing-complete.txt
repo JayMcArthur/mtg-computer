@@ -1,0 +1,582 @@
+                                                     Magic: The Gathering is Turing Complete
+                                                       Alex Churchill                            Stella Biderman                                   Austin Herrick
+                                                 Independent Researcher                  Georgia Institute of Technology                   University of Pennsylvania
+                                               Cambridge, United Kingdom                Atlanta, United States of America            Philadelphia, United States of America
+                                            alex.churchill@cantab.net                  stellabiderman@gatech.edu                     aherrick@wharton.upenn.edu
+
+
+
+
+                                            Abstract—Magic: The Gathering is a popular and famously           successful and highly flexible framework for modelling games
+                                         complicated trading card game about magical combat. In this          as computations.
+arXiv:1904.09828v2 [cs.AI] 23 Apr 2019
+
+
+
+
+                                         paper we show that optimal play in real-world Magic is at              The core of this paper is the construction presented in
+                                         least as hard as the Halting Problem, solving a problem that
+                                         has been open for a decade [1], [10]. To do this, we present a       Section IV: a universal Turing machine embedded into a game
+                                         methodology for embedding an arbitrary Turing machine into a         of Magic: The Gathering. As we can arrange for the victor
+                                         game of Magic such that the first player is guaranteed to win the    of the game to be determined by the halting behaviour of
+                                         game if and only if the Turing machine halts. Our result applies     the Turing machine, this construction establishes the following
+                                         to how real Magic is played, can be achieved using standard-         theorem:
+                                         size tournament-legal decks, and does not rely on stochasticity
+                                         or hidden information. Our result is also highly unusual in that       Theorem 1: Determining the outcome of a game of Magic:
+                                         all moves of both players are forced in the construction. This       The Gathering in which all remaining moves are forced is
+                                         shows that even recognising who will win a game in which neither     undecidable.
+                                         player has a non-trivial decision to make for the rest of the game
+                                         is undecidable. We conclude with a discussion of the implications    A. Previous Work
+                                         for a unified computational theory of games and remarks about           Prior to this work, no undecidable real games were known
+                                         the playability of such a board in a tournament setting.
+                                                                                                              to exist. Demaine and Hearn (2009) [10] note that almost every
+                                                                                                              real-world game is trivially decidable, as they produce game
+                                                               I. I NTRODUCTION
+                                                                                                              trees with only computable paths. They further note that Rengo
+                                            Magic: The Gathering (also known as Magic) is a popular           Kriegspiel1 is “a game humans play that is not obviously
+                                         trading card game owned by Wizards of the Coast. Formally, it        decidable; we are not aware of any other such game.” It
+                                         is a two-player zero-sum stochastic card game with imperfect         is conjectured by Auger and Teytaud (2012) [1] that Rengo
+                                         information, putting it in the same category as games like           Kriegspiel is in fact undecidable, and it is posed as an open
+                                         poker and hearts. Unlike those games, players design their           problem to demonstrate any real game that is undecidable.
+                                         own custom decks out of a card-pool of over 20,000 cards.               The approach of embedding a Turing machine inside a
+                                         Magic’s multifaceted strategy has made it a popular topic in         game directly is generally not considered to be feasible for
+                                         artificial intelligence research.                                    real-world games [10]. Although some open-world sandbox
+                                            In this paper, we examine Magic: The Gathering from the           games such as Minecraft and Dwarf Fortress can support
+                                         point of view of algorithmic game theory, looking at the             the construction of Turing machines, those machines have no
+                                         computational complexity of evaluating who will win a game.          strategic relevance and those games are deliberately designed
+                                         As most games have finite limits on their complexity (such           to support large-scale simulation. In contrast, leading formal
+                                         as the size of a game board) most research in algorithmic            theory of strategic games claims that the unbounded memory
+                                         game theory of real-world games has primarily looked at              required to simulate a Turing machine entirely in a game
+                                         generalisations of commonly played games rather than the             would be a violation of the very nature of a game [9].
+                                         real-world versions of the games. A few real-world games have           The computational complexity of Magic: The Gathering in
+                                         been found to have non-trivial complexity, including Dots-and-       has been studied previously by several authors. Our work is
+                                         Boxes, Jenga and Tetris [8]. We believe that no real-world           inspired by [4], in which it was shown that four-player Magic
+                                         game is known to be harder than NP previous to this work.            can simulate a Turing machine under certain assumptions
+                                            Even when looking at generalised games, very few examples         about player behaviour. In that work, Churchill conjectures
+                                         of undecidable games are known. On an abstract level, the            that these limitations can be removed and preliminary work
+                                         Team Computation Game [9] shows that some games can be               along those lines is discussed in [5]. The computational
+                                         undecidable, if they are a particular kind of team game with         complexity of checking the legality of a particular decision
+                                         imperfect information. The authors also present an equivalent        in Magic (blocking) is investigated in [3] and is found to
+                                         construction in their Constraint Logic framework that was used       be coNP-complete. There have also been a number of papers
+                                         by Coulombe and Lynch (2018) [7] to show that some video                1 Rengo Kriegspiel is a combination of two variations on Go: Rengo, in
+                                         games, including Super Smash Bros Melee and Mario Kart,              which two players play on a team alternating turns, and Shadow Go, in which
+                                         have undecidable generalisations. Constraint Logic is a highly       players are only able to see their own moves.
+investigating algorithmic and artificial intelligence approaches       board state and a move to the next board state is computable2.
+to playing Magic, including Ward and Cowling (2009) [15],              However, it is unclear how to prove this beyond exhaustive
+Cowling et al. (2012) [6], and Esche (2018) [11]. Esche (2018)         analysis of the over 20,000 cards in the game. We leave that
+briefly considers the theoretical computational complexity of          question open for future work:
+Magic and states an open problem that has a positive answer               Conjecture 1: The function that takes a board state and
+only if Magic end-games are decidable.                                 a legal move and returns the next board state in Magic: The
+                                                                       Gathering is computable.
+B. Our Contribution                                                    In this conjecture we say “a legal move” because it is also not
+   This paper completes the project started by Churchill [4]           obvious that checking to see if a move is legal is computable.
+and continued by Churchill et al. [5] of embedding a universal         Chatterjee and Ibsen-Jensen [3] show that checking the legality
+Turing machine in Magic: The Gathering such that determin-             of a particular kind of game action is coNP-complete, but the
+ing the outcome of the game is equivalent to determining the           question has not been otherwise considered. Again, we leave
+halting of the Turing machine. This is the first result showing        this for future work:
+that there exists a real-world game for which determining                 Conjecture 2: There does not exist an algorithm for
+the winning strategy is non-computable, answering an open              checking the legality of a move in Magic: The Gathering.
+question of Demaine and Hearn [10] and Auger and Teytaud
+[1] in the positive. This result, combined with Rice’s Theorem         A. Previous Magic Turing Machines
+[13], also answers an open problem from Esche [11] in the                 In [4], the author presents a Magic: The Gathering end-
+negative by showing that the equivalence of two strategies for         game that embeds a universal Turing machine. However, this
+playing Magic is undecidable.                                          work has a major issue: it’s not quite deterministic. At several
+   This result raises important foundational questions about           points in the simulation, players have the ability to stop the
+the nature of a game itself. As we have already discussed, the         computation at any time by opting to decline to use effects that
+leading formal theory of games holds that this construction            say “may.” For example, Kazuul Warlord reads “Whenever
+is unreasonable, if not impossible, and so a reconsideration           Kazuul Warlord or another Ally enters the battlefield under
+of those assumptions is called for. In section V-A we discuss          your control, you may put a +1/ + 1 counter on each Ally
+additional foundational assumptions of Constraint Logic that           you control.” Declining to use this ability will interfere with
+Magic: The Gathering violates, and present our interpretation          the Turing machine, either causing it to stop or causing it
+of the implications for a unified theory of games.                     to perform a different calculation from the one intended.
+                                                                       The construction as given in Churchill [4] works under the
+C. Overview                                                            assumption that all players that are given the option to do
+   The paper is structured as follows. In Section II we provide        something actually do it, but as the author notes it fails without
+background information on this work, including previous work           this assumption. Attempts to correct this issue are discussed
+on Magic Turing machines. In Section III we present a sketch           in Churchill et al. [5].
+of the construction and its key pieces. In Section IV we provide          In this work, we solve this problem by reformulating the
+the full construction of a universal Turing machine embedded           construction to exclusively use cards with mandatory effects.
+in a two-player game of Magic. In Section V we discuss the             We also substantially simplify the most complicated aspect
+game-theoretic and real-world implications of our result.              of the construction, the recording of the tape, and reduce the
+                                                                       construction from one involving four players to one involving
+                     II. P RELIMINARIES                                two, and which only places constraints on one player’s deck,
+   One initial challenge with Magic: The Gathering is the              matching the format in which Magic is most commonly played
+encoding of information. Some cards ask players to choose              in the real world (two-player duels). Like the previous work,
+a number. Although rules for how to specify a number are not           we will embed Rogozhin’s (2, 18) universal Turing machine
+discussed in the Comprehensive Rules [16], convention is that          [14].
+players are allowed to specify numbers in any way that both
+                                                                               III. A N OVERVIEW OF THE C ONSTRUCTION
+players can agree to. For example, you are allowed to choose
+the number 2100 or ⌈log 177⌉. This presents an issue brought              In this section we give a big picture view of the Turing
+to our attention by Fortanely [12]. Consider the following             machine, with full details deferred to the next section. The
+situation: both players control Lich, Transcendence, and               two players in the game are named Alice and Bob.
+Laboratory Maniac. One player then casts Menacing Ogre.                   To construct a Turing machine in Magic: The Gathering
+The net effect of this play is the “Who Can Name the Bigger            requires three main elements: the tape which encodes the
+Number” game – whoever picks the biggest number wins on                computation, the controller which determines what action to
+the spot. This makes identifying the next board state non-             take next based on the current state and the last read cell, and
+computable [2], so we require that any numbers specified by            the read/write head which interacts with the tape under the
+a player must be expressed in standard binary notation.                control of the controller.
+   We believe that with this restriction Magic: The Gathering is        2 We avoid the term “computable game” which is more commonly used to
+transition-computable, meaning that the function that maps a           mean that the game has a computable winning strategy.
+
+
+
+
+                                                                   2
+A. The Tape                                                                        lasts indefinitely.)” So we create a large number of copies
+   As the rules of Magic: The Gathering do not contain any                         of Rotlung Reanimator and edit each one. A similar card
+concept of geometry or adjacency, encoding the tape itself                         Glamerdye can be used to modify the colour words within
+is tricky. Our solution is to have many creature tokens with                       card text.
+carefully controlled power and toughness, with each token’s                           Thus, we edit a Rotlung Reanimator by casting two copies
+power and toughness representing the distance from the head                        of Artificial Evolution replacing ‘Cleric’ with ‘Aetherborn’
+of the Turing machine. The tape to the left of the Turing                          and ‘Zombie’ with ‘Sliver’ and one copy of Glamerdye to
+machine’s current read head position is represented by a                           replace ‘black’ with ‘white’, so that this Rotlung Reani-
+series of creature tokens which all have the game colour                           mator now reads “Whenever Rotlung Reanimator or another
+green, while the tape to the right is represented by white                         Aetherborn dies, create a 2/2 white Sliver creature token”4 .
+tokens. Our distance-counting starts at 2, so there is one 2/2                     This Rotlung Reanimator now encodes the first rule of the
+token representing the space currently under the head of the                       q1 program of the (2, 18) UTM: “When reading symbol 1
+Turing machine; a green 3/3 token represents the tape space                        in state A, write symbol 18 and move left.” The Aetherborn
+immediately to the left of the Turing head, a green 4/4 is                         creature token represents symbol 1, the Sliver creature token
+the space to the left of that, and so on. Rogozhin’s universal                     represents symbol 18, and the fact that the token is white leads
+Turing machine starts with the read head in the middle of the                      to processing that will cause the head to move left.
+tape [14].                                                                            We similarly have seventeen more Rotlung Reanimators
+   To represent the symbols on the tape, we use creature types.                    encoding the rest of the q1 program from [14]. Between them
+We choose 18 creature types from the list of creature types in                     they say:
+Magic to correspond to the 18 symbols in Rogozhin’s (2, 18)                          1) Whenever an Aetherborn dies, create a 2/2 white Sliver.
+UTM. We can choose these creature types to begin with suc-                           2) Whenever a Basilisk dies, create a 2/2 green Elf.
+cessive letters of the alphabet: Aetherborn, Basilisk, Cephalid,                        Whenever a . . . dies, create a 2/2 . . .
+Demon, Elf, Faerie, Giant, Harpy, Illusion, Juggernaut, Kavu,                       18) Whenever a Sliver dies, create a 2/2 green Cephalid.
+Leviathan, Myr, Noggle, Orc, Pegasus, Rhino, and Sliver. For                       See Table II for the full encoding of the program.
+example, a green 5/5 Aetherborn token represents that the 1st
+symbol is written on the 3rd cell to the left of the head, and a                   C. The Read/Write Head
+white 10/10 Sliver represents that the 18th symbol is written                         The operation “read the current cell of the tape” is rep-
+on the 9th cell to the right of the head. These tokens are all                     resented in-game by forcing Alice to cast Infest to give all
+controlled by Bob, except the most recently created token (the                     creatures −2/−2. This causes the unique token with 2 toughness
+space the Turing head has just left) which is controlled by                        to die. It had a colour (green or white) which is irrelevant,
+Alice.                                                                             and a creature type which corresponds to the symbol written
+                                                                                   on that cell. That creature type is noticed by a Rotlung
+B. The Controller                                                                  Reanimator, which has a triggered ability that is used to carry
+   Control instructions in a Turing machine are represented by                     out the logic encoded in the head of the Turing machine. It
+a table of conditional statements of the form “if the machine                      produces a new 2/2 token, containing the information written
+is in state s, and the last read cell is symbol k, then do such-                   to the cell that was just read.
+and-such.” Many Magic cards have triggered abilities which                            The Turing machine then moves either left or right and
+can function like conditional statements. The two we shall use                     modifies the tokens to keep the tape in order by adding
+are Rotlung Reanimator (“Whenever Rotlung Reanimator or                            +1/ + 1 counters to all tokens on one side of the head and
+another Cleric dies, create a 2/2 black Zombie creature token”)                    −1/−1 counters to all tokens on the other side. Moving left or
+and Xathrid Necromancer (“Whenever Xathrid Necromancer                             right will be accomplished by casting first Cleansing Beam
+or another Human creature you control dies, create a tapped                        and then Soul Snuffers.
+2/2 black Zombie creature token”). We will use both, and the
+difference between tapped and untapped creature tokens will                        D. Adding a Second State
+contribute to the design of the Turing machine.                                       Everything described so far outlines the operation of one
+   Each Rotlung Reanimator3 needs to trigger from a dif-                           state of the Turing machine. However, our Turing machine
+ferent state being read – that is, a different creature type                       requires two states. To accomplish this, we leverage phasing:
+dying – and needs to encode a different result. Fortunately,                       an object with phasing can ‘phase in’ or ‘phase out’, and
+Magic includes cards that can be used to edit the text of other                    while it’s phased out, it’s treated as though it doesn’t exist.
+cards. The card Artificial Evolution is uniquely powerful for                      We can grant phasing to our Rotlung Reanimators using the
+our purposes, as it reads “Change the text of target spell or                      enchantment Cloak of Invisibility (“Enchanted creature has
+permanent by replacing all instances of one creature type with                     phasing and can’t be blocked except by Walls”) and create a
+another. The new creature type can’t be Wall. (This effect                         second set of Rotlung Reanimators to encode the program
+   3 For now we will speak about Rotlung Reanimator for simplicity. Some of          4 Throughout this paper, card text that has been modified using cards such
+these will in fact be Xathrid Necromancers as explained in the next section.       as Artificial Evolution is written in italics.
+
+
+
+
+                                                                               3
+                                                                 TABLE I
+                                                  G AME STATE WHEN THE (2, 18) UTM BEGINS
+
+               Card                       Controller   Changed text / choices / attachment            Card                  Controller
+               29 Rotlung Reanimator      Bob          See Table II                                   Wild Evocation        Bob
+               7 Xathrid Necromancer      Bob          See Table II                                   Recycle               Bob
+               29 Cloak of Invisibility   Alice        attached to each Rotlung Reanimator            Privileged Position   Bob
+               7 Cloak of Invisibility    Alice        attached to each Xathrid Necromancer           Vigor                 Alice
+               Wheel of Sun and Moon      Alice        attached to Alice                              Vigor                 Bob
+               Illusory Gains             Alice        attached to latest tape token                  Mesmeric Orb          Alice
+               Steely Resolve             Alice        Assembly-Worker                                Ancient Tomb          Alice
+               2 Dread of Night           Alice        Black                                          Prismatic Omen        Alice
+               Fungus Sliver              Alice        Incarnation                                    Choke                 Alice
+               Rotlung Reanimator         Alice        Lhurgoyf, black, Cephalid                      Blazing Archon        Alice
+               Rotlung Reanimator         Bob          Lhurgoyf, green, Lhurgoyf                      Blazing Archon        Bob
+               Shared Triumph             Alice        Lhurgoyf
+               Rotlung Reanimator         Alice        Rat, black, Cephalid
+               Rotlung Reanimator         Bob          Rat, white, Rat
+               Shared Triumph             Alice        Rat
+
+
+
+q2 . At the moment we read the current cell, exactly one set of            if able.” When the card resolves, it would normally be put
+Rotlung Reanimators will be phased in.                                     into her graveyard, but Alice is enchanted by Wheel of Sun
+   Objects with phasing phase in or out at the beginning of                and Moon, which causes it to be placed at the bottom of her
+their controller’s turn, effectively toggling between two states.          library instead, allowing her to redraw it in the future and
+Accordingly we will arrange for the turn cycle to last 4 turns             keeping the cards she needs to cast in order. After her upkeep
+for each player when no state change occurs, but just 3 turns              step, Alice proceeds to her draw step and draws the card that
+when we need to change state.                                              she will cast next turn.
+                                                                              Alice has no choices throughout this process: she does
+               IV. T HE F ULL C ONSTRUCTION
+                                                                           control one land, but it remains permanently tapped because
+   Now we will provide the full construction of the Magic: The             of Choke (“Islands don’t untap during their controllers untap
+Gathering Turing machine and walk through a computational                  steps”), so she is unable to cast any of the spells she draws
+step. The outline of one step of the computation is as follows             except via Wild Evocation’s ability. Neither player is able to
+(Bob’s turns are omitted as nothing happens during them):                  attack because they both control a Blazing Archon, “Creatures
+ T1 Alice casts Infest. Turing processing occurs: a white or               can’t attack you.”
+     green token dies, a new white or green token is created.                 Bob has no cards in hand and controls Recycle, which reads
+                                                                           (in part) “Skip your draw step”. This prevents Bob from losing
+ T2 Alice casts Cleansing Beam, putting two +1/ + 1 count-
+                                                                           due to drawing from an empty library.
+    ers on the side of the tape we are moving away from.
+ T3 If the Turing machine is remaining in the same state,                  B. Reading the Current Cell
+    Alice casts Coalition Victory. If it is changing state,
+                                                                              On the first turn of the cycle, Alice is forced to cast Infest,
+    Alice casts Soul Snuffers, putting a −1/−1 counter on
+                                                                           “All creatures get −2/−2 until end of turn.” This kills one
+    each creature.
+                                                                           creature: the tape token at the position of the current read
+ T4 If the Turing machine is remaining in the same state, this             head, controlled by Bob. This will cause precisely one creature
+    is the point where Alice casts Soul Snuffers. Otherwise,               of Bob’s to trigger – either a Rotlung Reanimator or a
+    the next computational step begins.                                    Xathrid Necromancer. Which precise one triggers is based
+                                                                           on that token’s creature type and the machine’s current state,
+A. Beginning a Computational Step and Casting Spells                       corresponding to the appropriate rule in the definition of the
+   At the beginning of a computational step, it is Alice’s turn            (2, 18) UTM. This Reanimator or Necromancer will create a
+and she has the card Infest in hand. Her library consists of the           new 2/2 token to replace the one that died. The new token’s
+other cards she will cast during the computation (Cleansing                creature type represents the symbol to be written to the current
+Beam, Coalition Victory, and Soul Snuffers, in that order).                cell, and the new token’s colour indicates the direction for the
+Bob’s hand and library are both empty. The Turing machine                  machine to move: white for left or green for right.
+is in its starting state and the tape has already been initialised.           Alice controls Illusory Gains, an Aura which reads “You
+   At the start of each of Alice’s turns, she has one card in              control enchanted creature. Whenever a creature enters the
+hand. She’s forced to cast it due to Bob controlling Wild                  battlefield under an opponent’s control, attach Illusory Gains to
+Evocation, which reads “At the beginning of each player’s                  that creature.” Each time one of Bob’s Rotlung Reanimators
+upkeep, that player reveals a card at random from their hand.              or Xathrid Necromancers creates a new token, Illusory
+If it’s a land card, the player puts it onto the battlefield.              Gains triggers, granting Alice control of the newest token on
+Otherwise, the player casts it without paying its mana cost                the tape, and reverting control of the previous token to Bob.
+
+
+
+                                                                       4
+                                                           TABLE II
+                  F ULL TEXT OF THE ROTLUNG R EANIMATORS AND X ATHRID N ECROMANCERS ENCODING THE (2, 18) UTM
+
+                           Rogozhin’s program       Card text
+                      q1     1        c2      Lq1   Whenever an Aetherborn dies, create a        2/2 white Sliver
+                            →
+                            −        ←−
+                      q1     1        11      Rq1   Whenever a Basilisk    dies, create a        2/2 green Elf
+                            ←−
+                      q1     1        c2      Lq1   Whenever a Cephalid dies, create a           2/2 white Sliver
+                            →
+                            −
+                      q1    11        1       Rq1   Whenever a Demon       dies, create a        2/2 green Aetherborn
+                            ←
+                            −        →
+                                     −
+                      q1    11        11      Lq1   Whenever an Elf        dies, create a        2/2 white Demon
+                                      ←
+                                      −
+                      q1     b         b      Rq1   Whenever a Faerie      dies, create a        2/2 green Harpy
+                            →
+                            −        ←−
+                      q1     b        b1      Rq1   Whenever a Giant       dies, create a        2/2 green Juggernaut
+                            ←−
+                      q1     b         b      Lq1   Whenever a Harpy       dies, create a        2/2 white Faerie
+                            →
+                            −
+                      q1    b1         b      Rq1   Whenever an Illusion   dies, create a        2/2 green Faerie
+                            ←
+                            −        →
+                                     −
+                      q1    b1        b1      Lq1   Whenever a Juggernaut dies, create a         2/2 white Illusion
+                      q1    b2        b3      Lq2   Whenever a Kavu        dies, create a tapped 2/2 white Leviathan
+                                     →
+                                     −
+                      q1    b3        b1      Lq2   Whenever a Leviathan dies, create a tapped 2/2 white Illusion
+                                      →
+                                      −
+                      q1     c        1       Lq2   Whenever a Myr         dies, create a tapped 2/2 white Basilisk
+                      q1    →
+                            −c        ←
+                                      −c      Rq1   Whenever a Noggle      dies, create a        2/2 green Orc
+                      q1    ←−
+                             c       →
+                                     −c1      Lq1   Whenever an Orc        dies, create a        2/2 white Pegasus
+                      q1    →
+                            −
+                            c1       ←−
+                                      c1      Rq2   Whenever a Pegasus     dies, create a tapped 2/2 green Rhino
+                      q1    ←
+                            −
+                            c1     HALT             Whenever a Rhino       dies, create a        2/2 blue Assassin
+                                      ←
+                                      −
+                      q1    c2        1       Rq1   Whenever a Sliver      dies, create a        2/2 green Cephalid
+                                      ←
+                                      −
+                      q2     1        1       Rq2   Whenever an Aetherborn dies, create a        2/2 green Cephalid
+                            →
+                            −         ←
+                                      −
+                      q2     1        1       Rq2   Whenever a Basilisk    dies, create a        2/2 green Cephalid
+                            ←−        →
+                                      −
+                      q2     1        1       Lq2   Whenever a Cephalid dies, create a           2/2 white Basilisk
+                            →
+                            −        ←−
+                      q2    11        11      Rq2   Whenever a Demon       dies, create a        2/2 green Elf
+                            ←
+                            −
+                      q2    11        1       Lq2   Whenever an Elf        dies, create a        2/2 white Aetherborn
+                      q2     b        b2      Rq1   Whenever a Faerie      dies, create a tapped 2/2 green Kavu
+                            →
+                            −         ←
+                                      −
+                      q2     b         b      Rq2   Whenever a Giant       dies, create a        2/2 green Harpy
+                            ←−        →
+                                      −
+                      q2     b         b      Lq2   Whenever a Harpy       dies, create a        2/2 white Giant
+                            →
+                            −        ←−
+                      q2    b1        b1      Rq2   Whenever an Illusion   dies, create a        2/2 green Juggernaut
+                            ←
+                            −         →
+                                      −
+                      q2    b1         b      Lq2   Whenever a Juggernaut dies, create a         2/2 white Giant
+                      q2    b2         b      Rq1   Whenever a Kavu        dies, create a tapped 2/2 green Faerie
+                                     ←−
+                      q2    b3        b1      Rq2   Whenever a Leviathan dies, create a          2/2 green Juggernaut
+                      q2     c        ←
+                                      −c      Rq2   Whenever a Myr         dies, create a        2/2 green Orc
+                      q2    →
+                            −c        ←
+                                      −c      Rq2   Whenever a Noggle      dies, create a        2/2 green Orc
+                      q2    ←−
+                             c        →
+                                      −c      Lq2   Whenever an Orc        dies, create a        2/2 white Noggle
+                      q2    →
+                            −
+                            c1        c2      Rq2   Whenever a Pegasus     dies, create a        2/2 green Sliver
+                      q2    ←
+                            −
+                            c1        c2      Lq1   Whenever a Rhino       dies, create a tapped 2/2 white Sliver
+                      q2    c2         c      Lq2   Whenever a Sliver      dies, create a        2/2 white Myr
+
+
+
+So at any point Bob controls all of the tape except for the            (“Creatures of the chosen type have shroud. (They can’t be
+most recently written symbol, which is controlled by Alice.            the targets of spells or abilities.)”) This makes it so that the
+                                                                       only legal target for Cleansing Beam is the one tape token
+C. Moving Left or Right                                                that Alice controls thanks to her Illusory Gains.
+   If the new token is white, the Turing machine needs to                 Recall that this token is white if we’re moving left, or green
+move left. To do this we need to take two actions: put a               if we’re moving right. Cleansing Beam is about to deal 2
++1/ + 1 counter on all white creatures (move the tape away             damage to each white creature if we’re moving left, or to
+from white), and put a −1/−1 counter on all green creatures            each green creature if we’re moving right. Alice and Bob
+(move the tape towards green). We rephrase this instead as:            each control a copy of Vigor – “If damage would be dealt
+put two +1/ + 1 counters on all white creatures, and put a             to another creature you control, prevent that damage. Put a
+−1/−1 counter on all creatures.                                        +1/ + 1 counter on that creature for each 1 damage prevented
+   On Alice’s second turn, she casts Cleansing Beam, which             this way.” So Cleansing Beam ends up putting two +1/ + 1
+reads “Cleansing Beam deals 2 damage to target creature and            counters on either each white creature or each green creature.
+each other creature that shares a color with it.” Bob controls            On the last turn of the cycle, Alice casts Soul Snuffers, a
+Privileged Position so none of Bob’s creatures can be targeted         3/3 black creature which reads “When Soul Snuffers enters the
+by any spell Alice casts. Alice controls some creatures other          battlefield, put a −1/−1 counter on each creature.” There are
+than the tape token, but they have all been granted creature           two copies of Dread of Night hacked to each say “Black
+type Assembly-Worker by a hacked Olivia Voldaren, and                  creatures get −1/−1”, which mean that the Soul Snuffers’
+Alice controls a Steely Resolve naming Assembly-Worker                 triggered ability will kill itself, as well as shrinking every other
+
+
+
+                                                                   5
+creature. The creatures comprising the tape have now received           that card is skipped and she moves on to draw Soul Snuffers
+either a single −1/−1 counter, or two +1/ + 1 counters and a            in turn T2’s draw step, so she will cast it on turn T3.
+−1/−1 counter.                                                             The net result of this is that the computation step is 3
+   To ensure that the creatures providing the infrastructure            turns long for each player when the state is changing, but
+(such as Rotlung Reanimator) aren’t killed by the succession            4 turns long for each player when the state is not changing. In
+of −1/−1 counters each computational step, we arrange that              the normal 4-turn operation, Bob’s phasing Reanimators and
+they also have game colours green, white, red and black,                Necromancers will phase in twice and phase out twice, and be
+using Prismatic Lace, “Target permanent becomes the color               in the same state on one cycle’s turn T1 as they were in the
+or colors of your choice. (This effect lasts indefinitely.)”            previous cycle’s turn T1. But when changing state, they will
+Accordingly, each cycle Cleansing Beam will put two +1/+1               have changed phase by the next cycle’s turn T1, switching the
+counters on them, growing them faster than the −1/−1 counters           Turing machine’s state.
+shrink them. This applies to each creature except Vigor
+itself; to keep each player’s Vigor from dwindling, there is            E. Out of Tape
+a Fungus Sliver hacked to read “All Incarnation creatures
+have ‘Whenever this creature is dealt damage, put a +1/ + 1                The Turing tape can be initialised to any desired length
+counter on it.’ ”                                                       before starting processing. But it is preferable to allow the
+                                                                        machine to run on a simulated infinite tape: in other words,
+                                                                        to assume that any uninitialised tape space contains symbol
+D. Changing State
+                                                                        3 (the blank symbol in the (2, 18) UTM), represented by
+   The instruction to change state is handled by replacing seven        creature type Cephalid. This is accomplished by having the
+of Bob’s Rotlung Reanimators with Xathrid Necromancer.                  ends of the currently-initialised tape marked by two special
+These two cards have very similar text, except that Xathrid             tokens, one green Lhurgoyf and one white Rat. Suppose we’ve
+Necromancer only notices Bob’s creatures dying (this is not             exhausted all the initialised tape to the left. This means that
+a problem, as the active cell of the tape is always controlled          the casting of Infest on turn T1 kills the Lhurgoyf rather than
+by Bob), and that Xathrid Necromancer creates its token                 one of the normal tape types. This does not directly trigger
+tapped.                                                                 any of the normal Reanimators/Necromancers. Instead, Bob
+   For example, when the q1 program (State A) sees symbol 1,            has another Rotlung Reanimator hacked to read “Whenever
+it writes symbol 18, moves left, and remains in state A. This           Rotlung Reanimator or another Lhurgoyf dies, create a 2/2
+is represented by a phasing Rotlung Reanimator under Bob’s              green Lhurgoyf creature token”, and Alice has a Rotlung
+control saying “Whenever Rotlung Reanimator or another                  Reanimator hacked to read “Whenever Rotlung Reanimator
+Aetherborn dies, create a 2/2 white Sliver creature token.”             or another Lhurgoyf dies, create a 2/2 black Cephalid creature
+   By contrast, when the q1 program sees symbol 11, it                  token.” Bob’s trigger will resolve first, then Alice’s.
+writes symbol 12, moves left, and changes to state B. This is              First, Bob’s Reanimator trigger creates a new Lhurgoyf just
+represented by a phasing Xathrid Necromancer under Bob’s                to the left of the current head. (Alice’s Illusory Gains triggers
+control saying “Whenever Xathrid Necromancer or another                 and gives her control of this new Lhurgoyf, but that will
+Kavu creature you control dies, create a tapped 2/2 white               soon change.) We have one copy of Shared Triumph set to
+Leviathan creature token.”                                              Lhurgoyf (“Creatures of the chosen type get +1/+1”) so this
+   In both cases this token is created under Bob’s control on           token arrives as a 3/3.
+turn T1, but Alice’s Illusory Gains triggers and grants her                Second, Alice’s Reanimator trigger now creates a 2/2 black
+control of it. In the case where it’s tapped, that means at             Cephalid under Alice’s control. The same two copies of Dread
+the beginning of turn T2, it will untap. This causes Alice’s            of Night as before are giving all black creatures −2/−2, so the
+Mesmeric Orb’s trigger to be put on the stack at the same time          black Cephalid will arrive as a 0/0 and immediately die.
+as Bob’s Wild Evocation’s trigger (since no player receives                The death of this Cephalid triggers one of the regular
+priority during the untap step). Alice is the active player, so         phasing Reanimators of Bob’s just as if a tape cell containing
+Alice’s trigger is put on the stack first and then Bob’s [16]; so       symbol 3 had been read: a new 2/2 token is created and
+the Wild Evocation trigger resolves, forcing Alice to cast and          Illusory Gains moves to that new token. The green Lhurgoyf
+resolve Cleansing Beam, before the Mesmeric Orb trigger                 token serving as an end-of-tape marker has been recreated one
+resolves.                                                               step over to the left.
+   When the Mesmeric Orb trigger does resolve, it tries to                 The situation for the white Rat representing the right-hand
+put the Coalition Victory from the top of Alice’s library into          end of the tape is exactly equivalent. Bob has a Rotlung
+her graveyard. But Wheel of Sun and Moon modifies this                  Reanimator hacked to read “Whenever Rotlung Reanimator
+event to put Coalition Victory onto the bottom of her library,          or another Rat dies, create a 2/2 white Rat creature token”;
+just underneath the Cleansing Beam that’s just resolved.                Alice has a Rotlung Reanimator hacked to read “Whenever
+   Once all these triggers are resolved, Alice proceeds to her          Rotlung Reanimator or another Rat dies, create a 2/2 black
+draw step. When the state is not changing, she will draw                Cephalid creature token”; and we have another Shared Tri-
+Coalition Victory at this point, but when the state is changing,        umph set to Rat.
+
+
+
+                                                                    6
+  (This algorithm would be a little more complex if reading                    real-world game of Magic in which a player has infinitely
+symbol 3 could cause a state change in the (2, 18) UTM, but                    many meaningfully different moves available to them has the
+thankfully it cannot.)                                                         potentially to highly impact the way we understand and model
+                                                                               games as a form of computation.
+F. Halting                                                                        Indeed, this result raises several interesting philosophical
+   We choose to encode halting as making Alice win the game.                   questions about games as a form of computation. Some
+   When the Turing machine doesn’t change state, Alice casts                   authors, such as Demaine and Hearn [9], have sought a formal
+the card Coalition Victory on her third turn. It reads “You win                framework for modelling games that is strictly sub-Turing.
+the game if you control a land of each basic land type and a                   Unlike the open-world, non-strategic games in which Turing
+creature of each color.” This normally accomplishes nothing                    machines have been constructed before, Magic: The Gathering
+because she controls no blue creatures (Prismatic Lace has                     is unambiguously a two-player strategic game like such models
+been used to give her creatures of all the other colours). She                 attempt to represent. Therefore this result shows that any sub-
+does, however, control one land, and also controls Prismatic                   Turing model is necessarily inadequate to capture all games.
+Omen, which reads “Lands you control are every basic land                      Quite the opposite: it seems likely that a super-Turing model
+type in addition to their other types.” Recall that Choke is in                of games would be necessary to explain Magic. The naı̈ve
+play, preventing her from activating the mana ability of this                  extension of Demaine and Hearn’s Constraint Logic to allow
+land.                                                                          for unbounded memory appears to be meaningless, although
+   When the halt symbol is read (symbol 17 in state A), the                    it’s possible that a clever approach would bring success.
+appropriate phasing Reanimator of Bob’s reads “Whenever                           Open Problem 3: Does there exist a generalisation of
+Rotlung Reanimator or another Rhino dies, create a 2/2 blue                    Constraint Logic that explains the computational complexity
+Assassin creature token.” Alice’s Illusory Gains takes control                 of Magic: The Gathering?
+of this Assassin token in the usual way in turn T1. She now                       Although our construction is reducible to the Halting Prob-
+meets the condition for Coalition Victory when she casts it                    lem, the fact that even evaluating a board is non-computable
+on turn T3, and wins the game.                                                 is strongly suggestive that the complexity of strategic play is
+   If the encoded machine does not in fact halt then the game                  greater than that. We believe there is strong evidence that the
+has entered an unbreakable deterministic infinite loop, which                  true computational complexity is far higher. In particular, we
+is specified as a draw by rule 104.4b [16].                                    conjecture:
+                                                                                  Conjecture 4: Playing Magic: The Gathering optimally is
+                             V. D ISCUSSION                                    at least as hard as 0(ω) .
+A. Consequences for Computational Theories of Games                               Whether or not it is possible for there to be a real-world
+   This construction establishes that Magic: The Gathering is                  game whose computational complexity is strictly harder than
+the most computationally complex real-world game known in                      0(ω) is an interesting philosophical question. If not, then this
+the literature. In addition to showing that optimal strategic                  conjecture would imply that Magic: The Gathering is as hard
+play in Magic is non-computable, it also shows that merely                     as it is possible for a real-world game to be.
+evaluating the deterministic consequences of past moves in
+Magic is non-computable. The full complexity of optimal                        B. Real-world Playability and Legality
+strategic play remains an open question, as do many other                         While there are practical difficulties involved with correctly
+computational aspects of Magic. For example, a player ap-                      setting up the necessary board state, such as running out of
+pears to have infinitely many moves available to them from                     space on your table, a sufficiently tenacious player could set
+some board states of Magic. Whether or not there exists a                      up and execute this construction in a real-world tournament
+
+
+                                                                    TABLE III
+                                    60-C ARD D ECKLIST TO PLAY THE T URING MACHINE IN A L EGACY TOURNAMENT
+
+     Card                    Purpose                    Card                      Purpose                 Card                   Purpose
+ 4    Ancient Tomb           Bootstrap              1    Rotlung Reanimator       Logic processing       1 Xathrid Necromancer   Change state
+ 4    Lotus Petal            Bootstrap              1    Cloak of Invisibility    Logic processing       1 Mesmeric Orb          Change state
+ 4    Grim Monolith          Infinite mana device   1    Infest                   Logic processing       1 Coalition Victory     Halting device
+ 4    Power Artifact         Infinite mana device   1    Cleansing Beam           Logic processing       1 Prismatic Omen        Halting device
+ 4    Gemstone Array         Infinite mana device   1    Soul Snuffers            Logic processing       1 Choke                 Halting device
+ 4    Staff of Domination    Draw rest of deck      1    Illusory Gains           Logic processing       1 Recycle               Remove choices
+ 1    Memnarch               Make token copies      1    Privileged Position      Logic processing       1 Blazing Archon        Remove choices
+ 1    Stolen Identity        Make token copies      1    Steely Resolve           Logic processing       1 Djinn Illuminatus     Simplify setup
+ 1    Artificial Evolution   Edit cards             1    Vigor                    Logic processing       1 Reito Lantern         Simplify setup
+ 1    Olivia Voldaren        Edit cards             1    Fungus Sliver            Logic processing       1 Claws of Gix          Simplify setup
+ 1    Glamerdye              Edit cards             1    Dread of Night           Logic processing       1 Riptide Replicator    Set up tape
+ 1    Prismatic Lace         Edit cards             1    Wild Evocation           Forced play device     1 Capsize               Set up tape
+ 1    Donate                 Edit card control      1    Wheel of Sun and Moon    Forced play device     1 Karn Liberated        Cleanup after setup
+ 1    Reality Ripple         Edit card phase        1    Shared Triumph           Infinite tape device   1 Fathom Feeder         Cleanup after setup
+
+
+
+
+                                                                           7
+game of Magic: The Gathering. An example 60-card deck that                                         R EFERENCES
+is capable of executing this construction on the first turn of          [1] David Auger and Oliver Teytaud. The frontier of decidability in partially
+the game and which is legal in the competitive Legacy format                observable recursive games. International Journal of Foundations of
+can be seen in Table III.                                                   Computer Science, 2012.
+                                                                        [2] Stella Biderman and Bjørn Kjos-Hanssen. Non-comparable natu-
+   With the correct draw, the deck uses Ancient Tomb and                    ral numbers. Theoretical Computer Science Stack Exchange, 2018.
+three Lotus Petals to play Grim Monolith and Power Arti-                    https://cstheory.stackexchange.com/q/41384(version:2018-08-16).
+fact and generate unlimited colourless mana, at which point             [3] Krishnendu Chatterjee and Rasmus Ibsen-Jensen. The complexity of
+                                                                            deciding legality of a single step of Magic: The Gathering. In 22nd
+Staff of Domination draws the rest of the deck and Gem-                     European Conference on Artificial Intelligence, 2016.
+stone Array generates unlimited coloured mana. The deck                 [4] Alex Churchill. Magic: The Gathering is Turing complete v5, 2012.
+casts most of the permanents immediately, and uses Stolen                   https://www.toothycat.net/∼ hologram/Turing/.
+                                                                        [5] Alex Churchill et al. Magic is Turing complete (the Turing machine
+Identity to make token copies of them (using Memnarch                       combo), 2014. http://tinyurl.com/pv3n2lg.
+first on the enchantments like Cloak of Invisibility). The              [6] Peter I. Cowling Colin D. Ward and Edward J. Powley. Ensemble deter-
+tape is initialised with Riptide Replicator and Capsize. Djinn              minization in Monte Carlo tree search for the imperfect information card
+                                                                            game Magic: The Gathering. In IEEE Transactions on Computational
+Illuminatus or Reito Lantern allow repeated casting of the                  Intelligence and AI in Games, volume 4, 2012.
+text-modification cards, as well as Reality Ripple which sets           [7] Michael J. Coulombe and Jayson Lynch. Cooperating in video games?
+the phase of the Rotlung Reanimators and Donate which                       Impossible! Undecidability of team multiplayer games. In 9th Interna-
+                                                                            tional Conference on Fun with Algorithms, 2018.
+gives most permanents to Bob. Once everything is set up,                [8] Erik D. Demaine and Robert A. Hearn. Playing games with algorithms:
+Steely Resolve is cast, and then Karn Liberated and Capsize                 algorithmic combinatorial game theory. In 26th Symp. on Mathematical
+are used to exile all setup permanents and all cards from                   Foundations in Computer Science, pages 18–32, 2001.
+                                                                        [9] Erik D. Demaine and Robert A. Hearn. Constraint logic: A uniform
+Bob’s hand, eventually exiling Capsize and Karn Liberated                   framework for modeling computation as games. In 2008 23rd Annual
+themselves. Now no player has any remaining choices except                  IEEE Conference on Computational Complexity, pages 149–162, 2008.
+to let the Turing machine execute.                                     [10] Erik D. Demaine and Robert A. Hearn. Games, Puzzles, and Computa-
+                                                                            tion. CRC Press, 2009.
+   In addition to the Comprehensive Rules [16], play at sanc-          [11] Alexander Esche. Mathematical Programming and Magic: The Gather-
+tioned Magic: The Gathering tournaments is also governed by                 ing. PhD thesis, Northern Illinois University, 2018.
+                                                                       [12] Eugenio Fortanely. Personal communication, 2018.
+the Tournament Rules [17]. Some of these rules, most notably           [13] H. G. Rice. Classes of recursively enumerable sets and their decision
+the ones involving slow play, may effect an individual’s ability            problems. Trans. Amer. Math. Soc., 74:358366, 1953.
+to successfully execute the combo due to concerns about the            [14] Yurii Rogozhin. Small universal Turing machines. Theoretical Computer
+                                                                            Science, 168(2):215–240, 1996.
+sheer amount of time it would take to manually move the                [15] Colin D. Ward and Peter I. Cowling. Monte Carlo search applied to
+tokens around to simulate a computation on a Turing machine.                card selection in Magic: The Gathering. In CIG’09 Proceedings of the
+This would not be a concern for two agents with sufficiently                5th international conference on Computational Intelligence and Games,
+                                                                            pages 9–16, 2009.
+high computational power, as the Tournament Rules also                 [16] Wizards       of      the    Coast.            Magic:      The    Gath-
+provide a mechanism called “shortcuts” for players to skip                  ering          comprehensive           rules,        Aug           2018.
+carrying out laborious loops if both players agree on the game              https://magic.wizards.com/en/game-info/gameplay/rules-and-formats/rules.
+                                                                       [17] Wizards        of        the    Coast.                  Magic:       The
+state at the beginning and the end of the shortcut.                         Gathering            tournament         rules,        Aug          2018.
+                                                                            https://wpn.wizards.com/sites/wpn/files/attachements/mtg mtr 21jan19 en.pdf.
+                      VI. C ONCLUSION
+   We have presented a methodology for embedding Ro-
+gozhin’s (2, 18) universal Turing machine in a two-player
+game of Magic: The Gathering. Consequently, we have shown
+that identifying the outcome of a game of Magic in which all
+moves are forced for the rest of the game is undecidable. In
+addition to solving a decade-old outstanding open problem, in
+the process of arriving at our result we showed that Magic:
+The Gathering does not fit assumptions commonly made by
+computer scientists while modelling games. We conjecture that
+optimal play in Magic is far harder than this result alone
+implies, and leave the true complexity of Magic and the
+reconciliation of Magic with existing theories of games for
+future research.
+
+                   ACKNOWLEDGEMENTS
+  We are grateful to C-Y. Howe for help simplifying our Tur-
+ing machine construction considerably and to Adam Yedidia
+for conversations about the design and construction of Turing
+machines.
+
+
+
+                                                                   8
+

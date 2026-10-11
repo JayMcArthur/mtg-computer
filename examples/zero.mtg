@@ -1,0 +1,4 @@
+# Clear a nonzero prepared value using real runtime assignment.
+input a = 7
+a = 0
+halt

@@ -1,0 +1,474 @@
+{
+  "kind": "engine-card-scripts",
+  "revision": "5222f05e569da8e33c85858e6fe1698901548d64",
+  "cards": [
+    {
+      "name": "Aggressive Mining",
+      "file": "aggressive_mining.txt",
+      "sha256": "27f97e4e16080d7c58da456a6b4abfa25c87e18f368561abec4115b1e20c55a6",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/a/aggressive_mining.txt"
+    },
+    {
+      "name": "Angrath's Marauders",
+      "file": "angraths_marauders.txt",
+      "sha256": "39f4ffa4fa032f4dcd3e3b7143dad5d2562c8db096be245fcf31aadffdeb785a",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/a/angraths_marauders.txt"
+    },
+    {
+      "name": "Archpriest of Iona",
+      "file": "archpriest_of_iona.txt",
+      "sha256": "3ca12ae8d7afff3dad014bfe822a1e423345b3e7b175036ea65e6126d82b9fab",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/a/archpriest_of_iona.txt"
+    },
+    {
+      "name": "Ascendant Spirit",
+      "file": "ascendant_spirit.txt",
+      "sha256": "b6fca2d2a00d2c409f363fab07db348231c2b9529168cebf50c0f8fa0b4bf603",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/a/ascendant_spirit.txt"
+    },
+    {
+      "name": "Belligerent Brontodon",
+      "file": "belligerent_brontodon.txt",
+      "sha256": "5e638efa174b2e3b1473992aa1347a04d2fc733ccf67e92ce0f8e8f35ab3f76e",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/b/belligerent_brontodon.txt"
+    },
+    {
+      "name": "Blinding Angel",
+      "file": "blinding_angel.txt",
+      "sha256": "ca5035b34aab8468e6e0c75a076f74a9edb2a3efc747dbbf4420ad2be1db192b",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/b/blinding_angel.txt"
+    },
+    {
+      "name": "Blood Sun",
+      "file": "blood_sun.txt",
+      "sha256": "5f20b8a85efbf7d9f0399649201adb8b789c1bbfbad550c06578e92d1ec95296",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/b/blood_sun.txt"
+    },
+    {
+      "name": "Bloodthirster",
+      "file": "bloodthirster.txt",
+      "sha256": "fdf80d9c177d5f77669236ad35a097eaa771366dbe2117abc064e0ee9377f8c4",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/b/bloodthirster.txt"
+    },
+    {
+      "name": "Bludgeon Brawl",
+      "file": "bludgeon_brawl.txt",
+      "sha256": "7da72bb09ab94d6110acfc5443a5fcf6a180bee30a1e1a6acbc6b29e8e7ac074",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/b/bludgeon_brawl.txt"
+    },
+    {
+      "name": "Celestial Convergence",
+      "file": "celestial_convergence.txt",
+      "sha256": "27394ce21175550cb40723a7a79534c9b2e5276a439bd4bd8afad2f74eb02073",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/c/celestial_convergence.txt"
+    },
+    {
+      "name": "Chains of Mephistopheles",
+      "file": "chains_of_mephistopheles.txt",
+      "sha256": "ca65dae083d0d5a9079ff14c4c61b51389a56e0bb18c4b16828c83a6fb3c4634",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/c/chains_of_mephistopheles.txt"
+    },
+    {
+      "name": "Choke",
+      "file": "choke.txt",
+      "sha256": "6e8f28ebdc9b676b68e220693f5e7c400ae54f5570f2112d1b079c106d069067",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/c/choke.txt"
+    },
+    {
+      "name": "Corrosive Mentor",
+      "file": "corrosive_mentor.txt",
+      "sha256": "05fced4916fbd56971a2ce0e833ffe87435483e4bff5e8c162eb4cd6ca7d46f9",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/c/corrosive_mentor.txt"
+    },
+    {
+      "name": "Cursed Totem",
+      "file": "cursed_totem.txt",
+      "sha256": "1bc283d2c0f2713ef3e1b87058d7406b6575aa94d90c663087ad4049b56e6c9f",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/c/cursed_totem.txt"
+    },
+    {
+      "name": "Darksteel Myr",
+      "file": "darksteel_myr.txt",
+      "sha256": "17dc60f44767782cdb7be4e13625784d646582c85c974a6c682b2a580897f5f4",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/d/darksteel_myr.txt"
+    },
+    {
+      "name": "Dralnu's Crusade",
+      "file": "dralnus_crusade.txt",
+      "sha256": "4e779edd7c9cf7419e5d3a439eaf57f56e7d196f9afed951d9ba45b7ba929848",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/d/dralnus_crusade.txt"
+    },
+    {
+      "name": "Dream Fighter",
+      "file": "dream_fighter.txt",
+      "sha256": "f84f9d0a5e41c2f39c22a3af5e9eaae3e11be9f982c3cb0a17f610098823930e",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/d/dream_fighter.txt"
+    },
+    {
+      "name": "Empyrial Archangel",
+      "file": "empyrial_archangel.txt",
+      "sha256": "2e1f2877e70d007437833786b6cbb47bc4fbe482fbde2bf0418ce37554f157e2",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/e/empyrial_archangel.txt"
+    },
+    {
+      "name": "Excruciator",
+      "file": "excruciator.txt",
+      "sha256": "36f3bdaf8b0679e0eb91ee793f3e53f3a8047e32e9ea035d10b9ddcf6e9220d6",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/e/excruciator.txt"
+    },
+    {
+      "name": "Fiery Emancipation",
+      "file": "fiery_emancipation.txt",
+      "sha256": "565b8d18c4cf2b797108ee51718c834192c927f02f1de20245010194ec897964",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/f/fiery_emancipation.txt"
+    },
+    {
+      "name": "Fishliver Oil",
+      "file": "fishliver_oil.txt",
+      "sha256": "7d06f4bb8166eb679e86088504c42ed868acfe4b19ad38a1c6dfb4504bf17542",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/f/fishliver_oil.txt"
+    },
+    {
+      "name": "Forest",
+      "file": "forest.txt",
+      "sha256": "9a574ea2a8136e588ab77ff8bf260075a94572d8099a7d0d98c62590479aa5a6",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/f/forest.txt"
+    },
+    {
+      "name": "Furtive Homunculus",
+      "file": "furtive_homunculus.txt",
+      "sha256": "7f8126b34b710492e0e33b339d68a9b039309a184acea780ac43b5fb3643f090",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/f/furtive_homunculus.txt"
+    },
+    {
+      "name": "Grand Melee",
+      "file": "grand_melee.txt",
+      "sha256": "3c6448d18393a4f243c52ecdfa6ca89e684b35ad50df76962341dec2e48bfd1f",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/g/grand_melee.txt"
+    },
+    {
+      "name": "Halana and Alena, Partners",
+      "file": "halana_and_alena_partners.txt",
+      "sha256": "b3f32c1cee49f2f15a6849d717eb1f43a21affab22c8e0b32c2e601b6a1bc2d2",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/h/halana_and_alena_partners.txt"
+    },
+    {
+      "name": "Halfdane",
+      "file": "halfdane.txt",
+      "sha256": "c9b7062ab526a0991242bc25057ed93acbb32e5df5fa90da287d9de703791d84",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/h/halfdane.txt"
+    },
+    {
+      "name": "Illusionary Terrain",
+      "file": "illusionary_terrain.txt",
+      "sha256": "4b2ae534d90dfd3af683536013c76fde5590fb0f882d46ddf1a4ef32efcbd559",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/i/illusionary_terrain.txt"
+    },
+    {
+      "name": "Island",
+      "file": "island.txt",
+      "sha256": "e590434de75aa3e39a03555d0c91788cdabe37f5fdf91ce7c1a189c79f4cade6",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/i/island.txt"
+    },
+    {
+      "name": "Ivory Mask",
+      "file": "ivory_mask.txt",
+      "sha256": "895a706a02977d82ca9ca832d64e7745d7614138dd602591c940dc9c141f0cea",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/i/ivory_mask.txt"
+    },
+    {
+      "name": "Joraga Warcaller",
+      "file": "joraga_warcaller.txt",
+      "sha256": "45491978030c51628f07cda283f1f2177730af9e9f433fa03304d14e86579832",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/j/joraga_warcaller.txt"
+    },
+    {
+      "name": "Justice",
+      "file": "justice.txt",
+      "sha256": "684d6bc108e854e577054cbcb0c528425064c2400aedf130db834bce669ec30a",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/j/justice.txt"
+    },
+    {
+      "name": "Kangee, Aerie Keeper",
+      "file": "kangee_aerie_keeper.txt",
+      "sha256": "00a58367fee847b98506b6cabfbf03d1cb9ae23752eb8218acb4cfe407de2be3",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/k/kangee_aerie_keeper.txt"
+    },
+    {
+      "name": "Khorvath Brightflame",
+      "file": "khorvath_brightflame.txt",
+      "sha256": "eb22a245eeca34a88686d29f5f6ef8eb5641d008bb721e94f1a7bf4539c5456e",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/k/khorvath_brightflame.txt"
+    },
+    {
+      "name": "Lich",
+      "file": "lich.txt",
+      "sha256": "db3927d509f4f79d730a80dbfb3ab80a11913a9841fabd2b92a46c3b4f5dda14",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/l/lich.txt"
+    },
+    {
+      "name": "Life and Limb",
+      "file": "life_and_limb.txt",
+      "sha256": "23a25c87e64e0c5eae7c718fdba9e73895470cef7ebfd0525c4af6f0d9828549",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/l/life_and_limb.txt"
+    },
+    {
+      "name": "Mangara's Equity",
+      "file": "mangaras_equity.txt",
+      "sha256": "e9d2501bc4f19958e54432439d5761818a8f45f6e991ad13d18d5b86257add33",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/m/mangaras_equity.txt"
+    },
+    {
+      "name": "Masked Gorgon",
+      "file": "masked_gorgon.txt",
+      "sha256": "24d35f8102a381a293964e71605ad79531f1026e59fd49d8be931c6744bfca02",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/m/masked_gorgon.txt"
+    },
+    {
+      "name": "Meishin, the Mind Cage",
+      "file": "meishin_the_mind_cage.txt",
+      "sha256": "99f4337ed291a959a533802e5d6970cf074e0d21d0536fcfc95e0e0f20750410",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/m/meishin_the_mind_cage.txt"
+    },
+    {
+      "name": "Melira's Keepers",
+      "file": "meliras_keepers.txt",
+      "sha256": "31d3530ca2832eac5a9f9a1c032f5bd6fb363e68a40ee24bc83cf62b6d35b821",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/m/meliras_keepers.txt"
+    },
+    {
+      "name": "Mirror Gallery",
+      "file": "mirror_gallery.txt",
+      "sha256": "73b26696529f01a88dbe61d86f2e3f4742af6c4e725f38a10d09ce9bd34d1b6b",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/m/mirror_gallery.txt"
+    },
+    {
+      "name": "Moonsilver Spear",
+      "file": "moonsilver_spear.txt",
+      "sha256": "d3333cd246f0c0ea10ea05bf7c845102f4a01b02d6823d10bad77bfd59fd2d10",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/m/moonsilver_spear.txt"
+    },
+    {
+      "name": "Mountain",
+      "file": "mountain.txt",
+      "sha256": "d421d9639d7b7f2a8c4ed04fa2fa8526cbc768733a92b0a1a453535ee99a3799",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/m/mountain.txt"
+    },
+    {
+      "name": "Necrogen Mists",
+      "file": "necrogen_mists.txt",
+      "sha256": "7ee31ac3006c780f073bac948b86621608b253fb4000631ae0fab29bb4c44dca",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/n/necrogen_mists.txt"
+    },
+    {
+      "name": "Omnath, Locus of Mana",
+      "file": "omnath_locus_of_mana.txt",
+      "sha256": "ad80c529733a286ac08c13a90ffa24591fc3f46e3a3a4a914ec1b71282a2a967",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/o/omnath_locus_of_mana.txt"
+    },
+    {
+      "name": "Plains",
+      "file": "plains.txt",
+      "sha256": "7b72280280cf668427e25283026a88ebcf3c67963e1097eda39ed6433c228f9c",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/p/plains.txt"
+    },
+    {
+      "name": "Reaper King",
+      "file": "reaper_king.txt",
+      "sha256": "b1f9c21a404990221a15a761d2c8a0c6796461f3b68688ad198311aa395bf727",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/r/reaper_king.txt"
+    },
+    {
+      "name": "Recycle",
+      "file": "recycle.txt",
+      "sha256": "ed5c3b69a1bacffc3240184f094d0e457e5c7fecb01c08b21a255a2af4ad3ede",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/r/recycle.txt"
+    },
+    {
+      "name": "Riders of Gavony",
+      "file": "riders_of_gavony.txt",
+      "sha256": "84403f842561d72e4d9279f4766c20d90c71aba35bdb34608eaf86c5d9125fd0",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/r/riders_of_gavony.txt"
+    },
+    {
+      "name": "Root Maze",
+      "file": "root_maze.txt",
+      "sha256": "baefcf93075b42434fe7e690165676cbe0619ce7a1a01ad60219bb0f45f2a373",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/r/root_maze.txt"
+    },
+    {
+      "name": "Rotlung Reanimator",
+      "file": "rotlung_reanimator.txt",
+      "sha256": "f7a449a1a8600d08a80594ff6d989fa6e61a3652a203dd8048b508059ed7d46d",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/r/rotlung_reanimator.txt"
+    },
+    {
+      "name": "Shadow Sliver",
+      "file": "shadow_sliver.txt",
+      "sha256": "e258f4af586dcaedcffc2fd1a429a510b715ee1e65667ad61945557197e3b185",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/shadow_sliver.txt"
+    },
+    {
+      "name": "Shape Stealer",
+      "file": "shape_stealer.txt",
+      "sha256": "8e14727f87c73815d951a17c470cda25e55883f64ed32d045f113077eae7962b",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/shape_stealer.txt"
+    },
+    {
+      "name": "Snow-Covered Forest",
+      "file": "snow_covered_forest.txt",
+      "sha256": "b8ca9b33a078f0380673a9f3d684a0d5fb25a9689f982f7c51e4322c8d3e063c",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/snow_covered_forest.txt"
+    },
+    {
+      "name": "Snow-Covered Island",
+      "file": "snow_covered_island.txt",
+      "sha256": "7d156a63884dce734098f4b56f376054a406e7feb64c6c299dcac607d8fb7935",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/snow_covered_island.txt"
+    },
+    {
+      "name": "Snow-Covered Mountain",
+      "file": "snow_covered_mountain.txt",
+      "sha256": "53ae4e9b7c365906c5658b973293af4f905d18ae5edb733748806fcbaafcae20",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/snow_covered_mountain.txt"
+    },
+    {
+      "name": "Snow-Covered Plains",
+      "file": "snow_covered_plains.txt",
+      "sha256": "78cf4e6c4b9f659c9e7039ea4857d638291ccea49285b5f9c01c0a3410ca0bef",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/snow_covered_plains.txt"
+    },
+    {
+      "name": "Snow-Covered Swamp",
+      "file": "snow_covered_swamp.txt",
+      "sha256": "9e5f818cf01955d846d87d27985b72da8601c0c22918cd634c751583d39e791c",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/snow_covered_swamp.txt"
+    },
+    {
+      "name": "Snow-Covered Wastes",
+      "file": "snow_covered_wastes.txt",
+      "sha256": "3f454e818f35c1aae790a3232256ba6b62b0b9f7dd16cd7fed8ff3b96e1bf1f4",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/snow_covered_wastes.txt"
+    },
+    {
+      "name": "Spectral Guardian",
+      "file": "spectral_guardian.txt",
+      "sha256": "03aabaa96c6f654afcc5beb65e3fc2ceffc55005e2de0b61710e371d603ccf85",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/spectral_guardian.txt"
+    },
+    {
+      "name": "Spellbane Centaur",
+      "file": "spellbane_centaur.txt",
+      "sha256": "c9df75a55a59c871d717ce8add955597dffd545ee4d6e8e0d2a2133a69a9c893",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/spellbane_centaur.txt"
+    },
+    {
+      "name": "Spiteful Shadows",
+      "file": "spiteful_shadows.txt",
+      "sha256": "e4b694d29ce255d98d42fd94916ef210210248d804fe7f18df58d70b91c21ed7",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/spiteful_shadows.txt"
+    },
+    {
+      "name": "Sterling Grove",
+      "file": "sterling_grove.txt",
+      "sha256": "662dd5e90f27c9a730090827d32aab10a86a370ac952f2dd8b39ea653889dc13",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/sterling_grove.txt"
+    },
+    {
+      "name": "Stony Silence",
+      "file": "stony_silence.txt",
+      "sha256": "468fbdb10d3bf9b5c48c7a018717ff300fbbc33e9070bb1c7a55d866aa886a79",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/stony_silence.txt"
+    },
+    {
+      "name": "Stormtide Leviathan",
+      "file": "stormtide_leviathan.txt",
+      "sha256": "3b5b680d1c4bbc7d4f65ca778655a62f155063edbd918b16427de1ab6600605e",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/stormtide_leviathan.txt"
+    },
+    {
+      "name": "Strata Scythe",
+      "file": "strata_scythe.txt",
+      "sha256": "2881c2bd48a826c8bf3c5721b571aa2878bbcfd96e017ddd2d27e6726b7e8360",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/strata_scythe.txt"
+    },
+    {
+      "name": "Suppression Bonds",
+      "file": "suppression_bonds.txt",
+      "sha256": "d825031c52c61d4e745f6ae887b6c028552bf1996ac04fc58dd0684cca8cfc75",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/suppression_bonds.txt"
+    },
+    {
+      "name": "Swamp",
+      "file": "swamp.txt",
+      "sha256": "96a473942577dee4fffe52906874ef343a7e8d1413872334baa576066112d252",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/swamp.txt"
+    },
+    {
+      "name": "Sylvia Brightspear",
+      "file": "sylvia_brightspear.txt",
+      "sha256": "7ae7fca91ecc24cf375ff63fb39b5795eb167888d271b860dda8ca6ad9e039fa",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/s/sylvia_brightspear.txt"
+    },
+    {
+      "name": "Tajuru Preserver",
+      "file": "tajuru_preserver.txt",
+      "sha256": "4a6b89592d3fa35fe0c2b569a894e64275bc18ec748e601d0d9415bfc2154343",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/t/tajuru_preserver.txt"
+    },
+    {
+      "name": "Tanuki Transplanter",
+      "file": "tanuki_transplanter.txt",
+      "sha256": "3f18bfe93cfed5191a6416a52161e7c8064f67979e5778b092599a06e6b05dca",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/t/tanuki_transplanter.txt"
+    },
+    {
+      "name": "Tetsuko Umezawa, Fugitive",
+      "file": "tetsuko_umezawa_fugitive.txt",
+      "sha256": "ed2888f043d55b07d43be33a3f642d68a29b316a4acfea6e544ce776e34a9aa4",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/t/tetsuko_umezawa_fugitive.txt"
+    },
+    {
+      "name": "Tomorrow, Azami's Familiar",
+      "file": "tomorrow_azamis_familiar.txt",
+      "sha256": "0bb90710be099d467f703e64b27def4a91b7dd2c19b549b69e498295f936a2a2",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/t/tomorrow_azamis_familiar.txt"
+    },
+    {
+      "name": "Vaevictis Asmadi, the Dire",
+      "file": "vaevictis_asmadi_the_dire.txt",
+      "sha256": "a733b046870e33ac0140fdbc5636d806cac32fc36499c3f30b623baecc58ccb4",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/v/vaevictis_asmadi_the_dire.txt"
+    },
+    {
+      "name": "Vigor",
+      "file": "vigor.txt",
+      "sha256": "85950dc4444c485c2bc1433cf967ed6d18b04daed50ea63b08ac77ee5bd10a48",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/v/vigor.txt"
+    },
+    {
+      "name": "Wastes",
+      "file": "wastes.txt",
+      "sha256": "471ac5a8e8a8d63609f6e31a14d8ce20bdc9bfbfa34395bb45a047139928f8d9",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/w/wastes.txt"
+    },
+    {
+      "name": "Wheel of Sun and Moon",
+      "file": "wheel_of_sun_and_moon.txt",
+      "sha256": "cba3299164934059fa32f720e5f3a7fbbb35b089de2ecd348e1be29297977e98",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/w/wheel_of_sun_and_moon.txt"
+    },
+    {
+      "name": "Worship",
+      "file": "worship.txt",
+      "sha256": "a6dda6a70976913dc28a3c1dd7f747ceb587e01077160365372a6d5bedd565cd",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/w/worship.txt"
+    },
+    {
+      "name": "Wrathful Red Dragon",
+      "file": "wrathful_red_dragon.txt",
+      "sha256": "12c4e51c67146fc369b1ec2b008e42da44b816d971350a7f4be5dca66cb77571",
+      "source": "https://github.com/Card-Forge/forge/blob/5222f05e569da8e33c85858e6fe1698901548d64/forge-gui/res/cardsfolder/w/wrathful_red_dragon.txt"
+    }
+  ]
+}
