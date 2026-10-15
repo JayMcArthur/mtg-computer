@@ -1,6 +1,6 @@
 # Readable programs running through Magic
 
-This is the initial architecture sketch. The follow-up [emulation plan](emulation-plan.md) refines implementation ordering and fidelity checks; the [visual debugger specification](visual-debugger.md) describes the linked source/program/board/event interface.
+This is the initial architecture sketch. The [current project plan](http://localhost:8313/yoss/Projects/MTGComputer/Plan) owns implementation ordering and acceptance; the [visual debugger specification](visual-debugger.md) describes the linked source/program/board/event interface.
 
 ## Architecture decision
 
