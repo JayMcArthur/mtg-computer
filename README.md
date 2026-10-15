@@ -11,8 +11,8 @@ The compiler preserves source lines, emits the twelve-basic-land encoding, and r
 - [2019 original paper](papers/2019-mtg-turing-complete.pdf), 8 pages.
 - [Research and card comparison](docs/research.md).
 - [Repository inventory](docs/repositories.md).
-- [Execution plan and residual review](docs/plan.md).
-- [Active end-to-end implementation plan](docs/implementation-plan.md).
+- [Current project plan](http://localhost:8313/yoss/Projects/MTGComputer/Plan).
+- [Active execution task and verification](http://localhost:8313/yoss/Projects/MTGComputer/Tasks/ExecutionResume20261012).
 - [Prepared construction inventory](docs/construction-inventory.md).
 - [Executed engine experiments](docs/engine-experiment.md).
 - [Physical preparation research and declared repairs](docs/legal-setup.md).
@@ -21,7 +21,7 @@ The compiler preserves source lines, emits the twelve-basic-land encoding, and r
 Follow-up research and planning:
 
 - [Older videos and conversion](docs/videos-and-conversion.md).
-- [Emulator implementation plan](docs/emulation-plan.md).
+- [Visible execution feature](http://localhost:8313/yoss/Projects/MTGComputer/Features/VisibleExecution).
 - [Visual debugger specification](docs/visual-debugger.md).
 - [Existing emulator landscape](docs/emulator-landscape.md).
 

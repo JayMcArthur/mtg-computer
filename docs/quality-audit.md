@@ -25,4 +25,4 @@ No configured or installed analyzers were found for cyclomatic/cognitive complex
 
 Unsupported decision callbacks are intentional implementations of required Forge abstract methods. They reject and persist failure even if Forge catches their exception; they are not fallback AI choices. Prepared import is a deliberate evidence boundary and does not claim legal setup reachability.
 
-The final scope review, full verification and mandatory fresh residual plan remain in implementation-plan.md.
+The final scope review, full verification and remaining work are tracked in the [active execution task](http://localhost:8313/yoss/Projects/MTGComputer/Tasks/ExecutionResume20261012).
